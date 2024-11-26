@@ -4,11 +4,7 @@ const { redisClient } = require('../config/redisConfig');
 
 exports.isAuthenticatedUser = async (req, res, next) => {
     try {
-        const auth = req.headers.authorization;
-        if(!auth) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
-        const token = auth.split(' ')[1];
+        const token = req.headers.authorization.split(' ')[1];
         const decoded = jsonwebtoken.verify(token, process.env.JWT_SECRET);
         if (!decoded) {
             return res.status(401).json({ message: 'Unauthorized' });
@@ -16,6 +12,7 @@ exports.isAuthenticatedUser = async (req, res, next) => {
         req.user = decoded; // Store the user object in the request
         next();
     } catch (err) {
+        console.log(err);
         res.status(500).json({ message: 'Internal server error' });
     }
 }

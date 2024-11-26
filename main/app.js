@@ -1,36 +1,59 @@
 const express = require('express');
+const cluster = require('cluster');
+const os = require('os');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
+const dotenv = require('dotenv').config({ path: '.env' });
+
 const db = require('./db/index');
-
-const dotenv = require('dotenv').config(
-    {
-        path: '.env'
-    }
-);
-
-
 const userRoute = require('./routes/User.route');
+const InformationRoute = require('./routes/Information.route');
 
-const app = express();
+// Check if the current process is the master
+if (cluster.isPrimary) {
+    // Get the number of CPU cores
+    const numCPUs = os.cpus().length;
 
-app.use(cors(
-    {
-        origin: ['http://localhost:3000'],
+    console.log(`Primary process PID: ${process.pid}`);
+    console.log(`Forking ${numCPUs} instances for each CPU core`);
+
+    // Fork a worker for each CPU core
+    for (let i = 0; i < numCPUs; i++) {
+        cluster.fork();
     }
-));
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+    // If a worker exits, log and fork a new worker
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`Worker ${worker.process.pid} exited with code ${code} and signal ${signal}`);
+        console.log('Starting a new worker...');
+        cluster.fork();
+    });
 
-app.use('/api/v1', userRoute);
+} else {
+    // If not the primary process, start the Express app
 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
+    const app = express();
 
-app.listen(process.env.PORT, () => {
-    console.log(`App listening on port ${process.env.PORT}!`);
-    console.log('Press Ctrl+C to quit.');
-});
+    app.use(cors({
+        origin: "*",
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
+    }));
+
+    app.use(bodyParser.urlencoded({ extended: false }));
+    app.use(bodyParser.json());
+
+    app.use('/api/v1', userRoute);
+    app.use('/api/v1', InformationRoute);
+
+    app.get('/', (req, res) => {
+        res.send('Main service is live!');
+    });
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`Worker ${process.pid} listening on port ${PORT}`);
+    });
+}

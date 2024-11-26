@@ -6,7 +6,7 @@ const { redisClient } = require('../config/redisConfig');
 const SALT = parseInt(process.env.SALT) || 10;
 
 
-const OTP_TTL = 300;
+const OTP_TTL = process.env.OTP_TTL || 300;
 
 exports.createUser = async (req, res) => {
     try {
@@ -36,7 +36,7 @@ exports.createUser = async (req, res) => {
         } else {
             otp = generateOTP(6); // Generate a new OTP
             await db.none('INSERT INTO "OTP" (userID, otp) VALUES ($1, $2)', [newUser.id, otp]); // Save in DB
-            redisClient.set(`OTP:${newUser.id}`, parseInt(otp), 'EX', OTP_TTL); // Save OTP in Redis with 5-minute TTL
+            await redisClient.set(`OTP:${newUser.id}`, parseInt(otp), 'EX', OTP_TTL); // Save OTP in Redis with 5-minute TTL
         }
 
         res.status(200).json({ user: newUser, otp, message: 'User created successfully', success: true });
@@ -109,30 +109,28 @@ exports.verifyUser = async (req, res) => {
         const cachedOtp = await redisClient.get(`OTP:${user.id}`);
         let otp
         if (cachedOtp) {
+
             otp = {
                 otp: cachedOtp
             };
         } else {
             otp = await db.oneOrNone('SELECT * FROM "OTP" WHERE userID = $1 ORDER BY created_at DESC LIMIT 1', [userID]);
-            console.log("came this long #1")
             if(!otp){
-                console.log("came this long #2")
                 otp = generateOTP(6);
                 await db.none('INSERT INTO "OTP" (userID, otp) VALUES ($1, $2)', [userID, otp]);
                 redisClient.set(`OTP:${user.id}`, parseInt(otp), 'EX', OTP_TTL);
                 return res.status(307).json({ message: 'Redirecting to verification page', redirectUrl: `/verification?id=${userID}&otp=${parseInt(otp)}`, success: false });
             }
-            console.log("came this long #3")
         }
-        if (parseInt(otp.otp) !== OTP) {
+        if (parseInt(otp.otp) !== parseInt(OTP)) {
             return res.status(401).json({ message: 'Invalid OTP', success: false });
         }
         await db.none('UPDATE "User" SET verification = true WHERE id = $1', [userID]);
 
         await db.none('DELETE FROM "OTP" WHERE userID = $1', [userID]);
         await redisClient.del(`OTP:${user.id}`);
-
-        res.status(200).json({ message: 'User verified successfully', success: true });
+        const token = jsonwebtoken.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '10d' });
+        res.status(200).json({ message: 'User verified successfully', success: true, user, token });
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: 'Internal server error', success: false });
@@ -230,7 +228,7 @@ exports.getUserByPayID = async (req, res) => {
     try {
         const { payID } = req.query;
         const user = await db.oneOrNone('SELECT * FROM "User" WHERE payID = $1', [payID]);
-        if (!user) {
+        if (!user || !user.verification) {
             return res.status(404).json({ message: 'User not found', success: false });
         }
 
@@ -252,7 +250,7 @@ exports.getUserByNumber = async (req, res) => {
     try {
         const { number } = req.query;
         const user = await db.oneOrNone('SELECT * FROM "User" WHERE number = $1', [number]);
-        if (!user) {
+        if (!user || !user.verification) {
             return res.status(404).json({ message: 'User not found', success: false });
         }
 
@@ -281,7 +279,7 @@ exports.changeNumber = async (req, res) => {
         if (!validPIN) {
             return res.status(401).json({ message: 'Invalid PIN', success: false });
         }
-
+        
         if(newNumber === number) {
             return res.status(400).json({ message: 'New number cannot be same as old number', success: false });
         }
@@ -299,3 +297,38 @@ exports.changeNumber = async (req, res) => {
         res.status(500).json({ message: 'Internal server error', success: false });
     }
 }
+
+exports.addConnection = async (req, res) => {
+    try {
+        const user = req.user; // The logged-in user
+        const { connectionId } = req.body; // The ID of the user to connect with
+
+        if (!connectionId) {
+            return res.status(400).json({ message: 'Connection ID is required', success: false });
+        }
+
+        // Fetch the current user's details, including connections
+        const userDetail = await db.oneOrNone('SELECT connections FROM "User" WHERE id = $1', [user.id]);
+
+        if (!userDetail) {
+            return res.status(404).json({ message: 'User not found', success: false });
+        }
+
+        // Check if the connection already exists
+        const connections = userDetail.connections || [];
+        if (connections.includes(connectionId)) {
+            return res.status(409).json({ message: 'Connection already exists', success: false });
+        }
+
+        // Add the new connection ID to the connections array
+        connections.push(parseInt(connectionId));
+
+        // Update the user's connections in the database
+        await db.none('UPDATE "User" SET connections = $1 WHERE id = $2', [connections, user.id]);
+
+        res.status(200).json({ message: 'Connection added successfully', success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error', success: false });
+    }
+};
