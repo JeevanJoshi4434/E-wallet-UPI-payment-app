@@ -1,13 +1,14 @@
 "use client";
 
+import Image from 'next/image';
 import React, { useState } from 'react'
 import { FaSpinner } from 'react-icons/fa';
 import { MdOutlineErrorOutline } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 
-const PaymentEntry = ({ amount, setAmount = () => { }, stage = 1, setStage = () => { }, data, amountInputRef, initiatePayment, setNote, note="", payButtonStatus=false }) => {
+const PaymentEntry = ({ amount, setAmount = () => { }, stage = 1, setStage = () => { }, data, amountInputRef, initiatePayment, setNote, note = "", payButtonStatus = false }) => {
     const [showPaymentPanel, setShowPaymentPanel] = useState(false); // New state for panel visibility
-    const {user} = useSelector((state)=>state.auth);
+    const { user } = useSelector((state) => state.auth);
     const handleContinueToPay = () => {
         setShowPaymentPanel(true); // Show the payment panel when the user clicks "Continue to Pay"
     };
@@ -23,16 +24,27 @@ const PaymentEntry = ({ amount, setAmount = () => { }, stage = 1, setStage = () 
                 {data.error && <p className='text-red-500 text-sm flex flex-col items-center justify-center'><MdOutlineErrorOutline size={24} /><br />{data.error}</p>}
                 {!data.loading && data.user ?
 
-                    <p className='text-lg text-center'>
-                        Paying To
-                        <span className='mx-1 font-semibold'>
-                            {data.user.name}
-                        </span>
+                    <>
+                        <p className='text-lg text-center'>
+                            Paying To
+                            <span className='mx-1 font-semibold'>
+                                {data.user.name}
+                            </span>
+                        </p>
+                        {
+                            data.type === "upi" &&
+                            <div className='flex flex-col gap-2 items-center justify-center'>
+                                <p className='text-xs font-semibold'>Via</p>
+                                <Image alt="UPI" src="/UPI.svg" width={100} height={70} />
+                            </div>
+                        }
                         <br />
-                        <span className='text-xs'>Phone Number: {data.user.number}</span>
-                        <br />
-                        <span className='text-xs'>PayID: {data.user.payid}</span>
-                    </p>
+                        <p className='text-lg text-center'>
+                            {data.user.number && <span className='text-xs'>Phone Number: {data.user.number}</span>}
+                            <br />
+                            <span className='text-xs'>{data.type === 1 ? "PayID" : "UPI"}: {data.user.payid}</span>
+                        </p>
+                    </>
                     :
                     <div className="flex flex-col items-center justify-center gap-2">
                         <div className="flex animate-pulse items-center justify-center gap-2">
@@ -81,13 +93,13 @@ const PaymentEntry = ({ amount, setAmount = () => { }, stage = 1, setStage = () 
                                                 value={amount}
                                                 min={1} />
                                         </div>
-                                        <textarea onChange={(e)=>setNote(e.target.value)} value={note} name="note" placeholder='Add Note' className='w-[250px] outline-none p-1 border rounded-md border-input'></textarea>
+                                        <textarea onChange={(e) => setNote(e.target.value)} value={note} name="note" placeholder='Add Note' className='w-[250px] outline-none p-1 border rounded-md border-input'></textarea>
                                         <div className=' min-w-[240px] w-[280px] p-1 flex items-center flex-wrap gap-2'>
-                                            <span onClick={(e)=>setNote(`Happy Birthday ${data.user.name}!`)} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Happy Birthday {data.user.name}!</span>
-                                            <span onClick={(e)=>setNote("PS5 le lena")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>PS5 le lena</span>
-                                            <span onClick={(e)=>setNote("Party from my side!")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Party from my side!</span>
-                                            <span onClick={(e)=>setNote("Enjoy your day ;)")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Enjoy your day ;)</span>
-                                            <span onClick={(e)=>setNote("Have some cookies")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Have some cookies</span>
+                                            <span onClick={(e) => setNote(`Happy Birthday ${data.user.name}!`)} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Happy Birthday {data.user.name}!</span>
+                                            <span onClick={(e) => setNote("PS5 le lena")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>PS5 le lena</span>
+                                            <span onClick={(e) => setNote("Party from my side!")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Party from my side!</span>
+                                            <span onClick={(e) => setNote("Enjoy your day ;)")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Enjoy your day ;)</span>
+                                            <span onClick={(e) => setNote("Have some cookies")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Have some cookies</span>
                                         </div>
                                     </>
                                     :
@@ -105,14 +117,19 @@ const PaymentEntry = ({ amount, setAmount = () => { }, stage = 1, setStage = () 
                                                 value={amount}
                                                 min={1} />
                                         </div>
-                                        <textarea onChange={(e)=>setNote(e.target.value)} value={note} name="note" placeholder='Add Note' className='w-[250px] outline-none p-1 border rounded-md border-input'></textarea>
-                                        <div className=' min-w-[240px] w-[280px] p-1 flex items-center flex-wrap gap-2'>
-                                            <span onClick={(e)=>setNote(`Happy Birthday ${data.user.name}!`)} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Happy Birthday {data.user.name}!</span>
-                                            <span onClick={(e)=>setNote("PS5 le lena")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>PS5 le lena</span>
-                                            <span onClick={(e)=>setNote("Party from my side!")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Party from my side!</span>
-                                            <span onClick={(e)=>setNote("Enjoy your day ;)")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Enjoy your day ;)</span>
-                                            <span onClick={(e)=>setNote("Have some cookies")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Have some cookies</span>
-                                        </div> 
+                                        {
+                                            data.type !== "upi" &&
+                                            <>
+                                                <textarea onChange={(e) => setNote(e.target.value)} value={note} name="note" placeholder='Add Note' className='w-[250px] outline-none p-1 border rounded-md border-input'></textarea>
+                                                <div className=' min-w-[240px] w-[280px] p-1 flex items-center flex-wrap gap-2'>
+                                                    <span onClick={(e) => setNote(`Happy Birthday ${data.user.name}!`)} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Happy Birthday {data.user.name}!</span>
+                                                    <span onClick={(e) => setNote("PS5 le lena")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>PS5 le lena</span>
+                                                    <span onClick={(e) => setNote("Party from my side!")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Party from my side!</span>
+                                                    <span onClick={(e) => setNote("Enjoy your day ;)")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Enjoy your day ;)</span>
+                                                    <span onClick={(e) => setNote("Have some cookies")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Have some cookies</span>
+                                                </div>
+                                            </>
+                                        }
                                     </>
                             }
                         </>
@@ -130,7 +147,7 @@ const PaymentEntry = ({ amount, setAmount = () => { }, stage = 1, setStage = () 
                 <div className='flex items-center justify-center p-3 flex-col gap-2'>
                     <button onClick={initiatePayment} disabled={data.stage_1_Loader} className={` ${!showPaymentPanel && 'hidden'} transition-all duration-500  ${payButtonStatus ? 'w-0' : 'w-full'} flex items-center text-center justify-center rounded-full text-black bg-white hover:bg-gray-100 font-semibold p-2 `}>{!data.stage_1_Loader ? `${!payButtonStatus && "Pay Now"}` : <FaSpinner className='spin' />}</button>
                     {data.error && <p className='text-red-500 text-xs w-full justify-center flex items-center gap-2'> <MdOutlineErrorOutline /> {data.error}</p>}
-                    { !payButtonStatus && <button onClick={() => setShowPaymentPanel(false)} className={` ${!showPaymentPanel && 'hidden'} w-full rounded-full transition-all duration-500  text-white bg-red-500 font-semibold p-2`}>Cancel</button>}
+                    {!payButtonStatus && <button onClick={() => setShowPaymentPanel(false)} className={` ${!showPaymentPanel && 'hidden'} w-full rounded-full transition-all duration-500  text-white bg-red-500 font-semibold p-2`}>Cancel</button>}
                     {/* <p className='absolute text-lg font-bold bottom-5 left-2'>{user.name} | Payment Karo</p> */}
                     {/* <p className='absolute text-xs bottom-1 right-2 flex items-center'>Payment Karo<sup>&copy;</sup>{new Date().getFullYear()} </p> */}
                 </div>

@@ -2,11 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const db = require('./db/index');
-const dotenv = require('dotenv').config(
-    {
-    path: '.env'
+
+if (process.env.NODE_ENV != "PRODUCTION") {
+    const dotenv = require('dotenv').config(
+        {
+            path: '.env'
+        }
+    );
 }
-);
 
 
 const paymentRoute = require('./routes/Payment.route');

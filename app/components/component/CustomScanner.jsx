@@ -31,7 +31,7 @@ export default function Scanner({ onScan, onError, onClose }) {
                 requestAnimationFrame(tick);
             }
         } catch (err) {
-            console.error("Camera initialization error:", err);
+            console.log("Camera initialization error:", err);
             setLoading(false);
             onError && onError(err);
         }
@@ -72,7 +72,9 @@ export default function Scanner({ onScan, onError, onClose }) {
                 setScanning(false);
                 onScan && onScan(code.data);
                 stopCamera(); // Stop the camera once code is found
-                redirectURL(JSON.parse(code.data));
+                // console.log(code.data);
+                const red = redirectURL(code.data === typeof String ? JSON.parse(code.data) : code.data.toString());
+                
             } else if (scanning) {
                 requestAnimationFrame(tick);
             }
@@ -83,9 +85,17 @@ export default function Scanner({ onScan, onError, onClose }) {
         if (QRData.TTL && !verifyTime(QRData.date, TTL)) {
             window.alert("QR isn't working anymore. Request a new one.");
         }
-        if (QRData && QRData.type) {
+        if (QRData && QRData.type && QRData.type === 1) {
             window.location.href = QRData.payURL;
-        } else {
+        }else if(QRData) {
+            const upiRegex = /^upi:\/\/pay\?.+/;
+            if(!upiRegex.test(QRData)) {
+                return false;
+            }
+            const payURL = `${process.env.NEXT_PUBLIC_URL}/payment/pay?${QRData.slice(10, QRData.length)}&&type=upi`;
+            window.location.href = payURL;
+        }
+         else {
             return false;
         }
     }

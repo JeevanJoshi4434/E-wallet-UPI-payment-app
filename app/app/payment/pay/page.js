@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchReciever, initiatePayment, Pay, verifyPayment } from '@/lib/APIs';
+import { fetchReciever, initiatePayment, initiateUPIPayment, Pay, PayWithUPI, verifyPayment, verifyUPIPayment } from '@/lib/APIs';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import PINEntry from './PINEntry';
@@ -19,15 +19,16 @@ const PayViaPIN = () => {
 
     const { user, token } = useSelector((state) => state.auth);
 
-    const [amount, setAmount] = useState(searchParams.get('amount') || 0);
+    const [amount, setAmount] = useState( searchParams.get('type') === "upi" ? searchParams.get('am') : searchParams.get('amount') || 0);
     const [note, setNote] = useState("");
     const amountInputRef = useRef(null); // Use useRef for input focus
+    const link = "upi://pay?pa=jeetnavin@ybl&pn=Jeevan&am=500&tn=sd&cu=INR";
 
     const [data, setData] = useState({
-        name: searchParams.get('name') || null,
-        number: searchParams.get('tel') || null,
-        amount: searchParams.get('amount') || null,
-        payID: searchParams.get('to') || null,
+        name: searchParams.get('type') === "upi" ? searchParams.get('pn') : searchParams.get('name') || "Unknown",
+        number: searchParams.get('type') === "upi" ? searchParams.get('pa') : searchParams.get('tel') || null,
+        amount: searchParams.get('type') === "upi" ? searchParams.get('am') : searchParams.get('amount') || null,
+        payID: searchParams.get('type') === "upi" ? searchParams.get('pa') : searchParams.get('to') || null,
         TTL: searchParams.get('TTL') || null,
         date: searchParams.get('date') || null,
         type: searchParams.get('type') || null,
@@ -88,7 +89,7 @@ const PayViaPIN = () => {
     async function initiatePay() {
         try {
             setData({ ...data, stage_1_Loader: true, error: '' });
-            const response = await initiatePayment(user.id, data.user.id, amount, token, note);
+            const response = data.type === "upi" ? await initiateUPIPayment( data.name || "User", data.payID, amount, token) : await initiatePayment(user.id, data.user.id, amount, token, note);
             if (response.success) {
                 setpayButtonHidden(true);
                 setTimeout(() => {
@@ -110,7 +111,8 @@ const PayViaPIN = () => {
     async function verifyPIN(pin) {
         try {
             setData({ ...data, stage_2_Loader: true });
-            const response = await verifyPayment(user.id, pin, data.txnid, token);
+            const response = data.type === "upi" ? await verifyUPIPayment(pin, data.txnid, token) : await verifyPayment(user.id, pin, data.txnid, token);
+            
             if (response.success) {
                 setData({ ...data, stage: 3, stage_3_Loader: true, stage_1_Loader: false, stage_2_Loader: false, error: '', txnid: response.txnid });
                 completePayment();
@@ -120,6 +122,7 @@ const PayViaPIN = () => {
                 setData({ ...data, error: response.message || "Something went wrong", stage_1_Loader: false, stage_2_Loader: false, stage_3_Loader: false });
             }
         } catch (error) {
+            console.log(error);
             setData({
                 ...data,
                 error: error.message || "Something went wrong",
@@ -130,7 +133,8 @@ const PayViaPIN = () => {
 
     async function completePayment() {
         try {
-            const response = await Pay(user.id, data.user.id, amount, data.txnid, token);
+            const response = data.type === "upi" ? await PayWithUPI(data.txnid, token) : await Pay(user.id, data.user.id, amount, data.txnid, token);
+           
             if (response.success) {
                 setData({ ...data, stage: 3, stage_3_Loader: false, stage_2_Loader: false, error: '', txnid: response.txnid, transaction: response.transaction });
             }
@@ -152,7 +156,17 @@ const PayViaPIN = () => {
 
 
     useEffect(() => {
-        fetchUser();
+        if (searchParams.get('type') === "upi") {
+            const user = {
+                name: searchParams.get('pn') || "Unknown",
+                number: null,
+                payid: searchParams.get('pa')
+            }
+            setData({...data, user: user, loading:false});
+        } else {
+
+            fetchUser();
+        }
     }, [])
 
     // useEffect(() => {
@@ -203,7 +217,7 @@ const PayViaPIN = () => {
                                                             <p className='text-sm font-semibold'>{data.user.payid}</p>
                                                             <p className='text-sm font-semibold'>By {user.name}</p>
                                                             <p className='text-sm font-semibold'>{user.payid}</p>
-                                                            <Link href={"/home"} className='text-sm mt-16 hover:underline'>Continue to Home (<Countdown startCount={5} onComplete={()=>{window.location.href = "/home"}} />)</Link>
+                                                            <Link href={"/home"} className='text-sm mt-16 hover:underline'>Continue to Home (<Countdown startCount={5} onComplete={() => { window.location.href = "/home" }} />)</Link>
                                                         </>
                                                     }
                                                 </>
@@ -220,7 +234,7 @@ const PayViaPIN = () => {
                                                         <p className='text-sm font-semibold'>{data.user.payid}</p>
                                                         <p className='text-sm font-semibold'>By {user.name}</p>
                                                         <p className='text-sm font-semibold'>{user.payid}</p>
-                                                        <Link href={"/home"} className='text-sm mt-16 hover:underline'>Continue to Home (<Countdown startCount={5} onComplete={()=>{window.location.href = "/home"}} />)</Link>
+                                                        <Link href={"/home"} className='text-sm mt-16 hover:underline'>Continue to Home (<Countdown startCount={5} onComplete={() => { window.location.href = "/home" }} />)</Link>
                                                     </>
                                                 }
                                                 </>

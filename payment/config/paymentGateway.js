@@ -28,6 +28,9 @@ const X_Auth_HEADER = () => {
   return base64Token;
 };
 
+const razorpayId = process.env.RAZORPAY_KEY_ID;
+const razorpayKey = process.env.RAZORPAY_KEY_SECRET;
+
 const AccountNumber = process.env.RAZORPAY_ACCOUNT_NUMBER;
 
-module.exports = {paymentGateway, X_Auth_HEADER, AccountNumber, RechargeGateway};
+module.exports = {paymentGateway, razorpayId, razorpayKey, X_Auth_HEADER, AccountNumber, RechargeGateway};

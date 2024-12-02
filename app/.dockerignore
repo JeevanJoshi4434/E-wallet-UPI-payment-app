@@ -1,0 +1,21 @@
+# Ignore node_modules to prevent copying the local dependencies
+node_modules/
+
+
+# Ignore environment files to avoid sensitive data being included
+.env
+.env.local
+
+# Optional: Ignore log files
+*.log
+
+# Optional: Ignore test folders and files
+tests/
+test/
+
+# Ignore Dockerfile itself (optional, depends on use case)
+Dockerfile
+
+# Ignore git files
+.git/
+.gitignore

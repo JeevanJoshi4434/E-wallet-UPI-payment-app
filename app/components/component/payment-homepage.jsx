@@ -17,6 +17,7 @@ import { fetchLoggedInUser, getBalance, getConnections, getPaymentHistory } from
 import { MdOutlineQrCodeScanner } from "react-icons/md";
 import SendMoney from "../Modal/Send-Money";
 import AddUser from "../Modal/Add-User";
+import Image from "next/image";
 
 export function PaymentHomepage() {
   const dispatch = useDispatch();
@@ -345,12 +346,33 @@ export function PaymentHomepage() {
                       <Card key={index}>
                         <CardHeader>
                           <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src="/placeholder-user.svg" alt="@shadcn" />
-                              <AvatarFallback>AC</AvatarFallback>
-                            </Avatar>
+                            {
+                              connection.method === "vpa" ?
+                                <Image src={"/UPI.svg"} width={50} height={32} alt="upi" />
+                                :
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src="/placeholder-user.svg" alt="@shadcn" />
+                                  <AvatarFallback>AC</AvatarFallback>
+                                </Avatar>
+                            }
                             <div>
-                              <div className="font-medium">{connection.name}</div>
+                              {
+                                connection.method === "vpa" ?
+                                  <>
+                                  {
+                                    JSON.parse(connection.details).name ?
+                                    <div className="flex flex-col items-start justify-start">
+                                    <div className="font-medium text-sm">{JSON.parse(connection.details).name}</div>
+                                    <div className=" font-semibold text-muted-foreground text-xs">{JSON.parse(connection.details).address}</div>
+                                    </div>
+                                    :
+                                    <div className="font-medium text-sm">{JSON.parse(connection.details).address}</div>
+
+                                  }
+                                  </>
+                                  :
+                                  <div className="font-medium">{connection.name}</div>
+                              }
                               <div className="text-xs text-muted-foreground">{new Date(connection.paid_at).toDateString()}</div>
                             </div>
                           </div>

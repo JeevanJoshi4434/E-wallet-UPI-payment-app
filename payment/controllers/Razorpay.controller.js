@@ -1,11 +1,12 @@
-const { paymentGateway, X_Auth_HEADER, AccountNumber, RechargeGateway } = require('../config/paymentGateway');
+const { paymentGateway, X_Auth_HEADER, AccountNumber, RechargeGateway, razorpayId, razorpayKey } = require('../config/paymentGateway');
 const db = require('../db');
 const HttpRequest = require('../modules/HttpRequest');
 const { generateFixedLengthId } = require('../utils/OTP_Generator');
 const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const AuditLog = require('../utils/audit_log');
 const crypto = require('crypto');
+
 
 const dotenv = require('dotenv').config(
     {
@@ -20,10 +21,10 @@ class ExternalPaymentController {
 
     // Method for initiating UPI payment
     async upiPaymentInitiate(req, res) {
-        const { upiId = "", amount } = req.body;
+        const { upiId = "", amount, name="User" } = req.body;
         try {
             if (!upiId || !amount) return res.status(400).json({ message: 'Missing required parameters' });
-            if (!upiId.match(/^\w+@\w+$/)) {
+            if (!upiId.match(/^[a-zA-Z0-9_-]+@[a-zA-Z0-9]+$/)) {
                 return res.status(400).json({ message: 'Invalid UPI ID format' });
             }
             if (amount < 1.00) {
@@ -36,16 +37,20 @@ class ExternalPaymentController {
             }
 
             const contact = await this.#filterVPA(upiId);
-            if (contact.success && contact.id) {
+            console.log(contact);
+            if (contact.success) {
+                const recieverID = contact.vpa.id || contact.id;
+                 if(!recieverID) return res.status(400).json({ message: 'Invalid Fund Acccount format' });
                 const user = await db.oneOrNone(`SELECT * FROM "User" WHERE id = $1`, [req.user.id]);
-                if (user.balance < transaction.amount) {
+                if (parseFloat(user.balance) < parseFloat(amount)) {
                     return res.status(400).json({ message: 'Insufficient balance' });
                 }
-                await db.none(`INSERT INTO "External_Transaction" (sId,rId,beforeAmount,amount,method, details,txnid) VALUES ($1, $2, $3, $4, $5, $6, $7)`, [req.user.id, contact.id, req.user.balance, amount, "vpa", JSON.stringify(details), txnid]);
+
+                await db.none(`INSERT INTO "External_Transaction" (sId,rId,beforeAmount,amount,method, details,txnid) VALUES ($1, $2, $3, $4, $5, $6, $7)`, [req.user.id, recieverID, req.user.balance, amount, "vpa", JSON.stringify(details), txnid]);
                 return res.status(200).json({ success: true, txnid });
             } else {
                 const data = {
-                    name: "User",
+                    name: name,
                     type: "customer",
                     upiId: upiId
                 }
@@ -64,9 +69,14 @@ class ExternalPaymentController {
                 if (user.balance < amount) {
                     return res.status(400).json({ message: 'Insufficient balance' });
                 }
-                await db.none(`INSERT INTO "External_Transaction" (sId,rId,beforeAmount,amount,method, details,txnid) VALUES ($1, $2, $3, $4, $5, $6, $7)`, [req.user.id, account.id, user.amount, amount, "vpa", JSON.stringify(details), txnid]);
 
-                return res.status(200).json({ success: true, txnid });
+                const newDetails = {
+                    "address": upiId,
+                    "name": name
+                }
+                await db.none(`INSERT INTO "External_Transaction" (sId,rId,beforeAmount,amount,method, details,txnid) VALUES ($1, $2, $3, $4, $5, $6, $7)`, [req.user.id, account.id, user.amount, amount, "vpa", JSON.stringify(newDetails), txnid]);
+
+                return res.status(200).json({ success: true, txnid, message: 'Transaction initiated successfully' });
             }
         } catch (error) {
             console.error('Unexpected error:', error);
@@ -100,9 +110,10 @@ class ExternalPaymentController {
             if (!transaction.verified) return res.status(403).json({ message: 'You are not allowed to do this transaction.' });
             if (transaction.success) return res.status(403).json({ message: 'This transaction has already been processed.' });
             const user = await db.oneOrNone(`SELECT * FROM "User" WHERE id = $1`, [parseInt(transaction.sid)]);
-            if (user.balance < transaction.amount) {
+            if (parseFloat(user.balance) < parseFloat(transaction.amount)) {
                 return res.status(400).json({ message: 'Insufficient balance' });
             }
+            let time;
             await db.tx(async (t) => {
                 const transaction = await db.oneOrNone(`SELECT * FROM "External_Transaction" WHERE txnid = $1`, [txnid]);
                 const status = await this.payout(parseFloat(transaction.amount), transaction.rid, "INR", "UPI", "payout", txnid);
@@ -110,10 +121,10 @@ class ExternalPaymentController {
                 // Update balances atomically
                 const amount = await t.one(`UPDATE "User" SET balance = balance - $1 WHERE id = $2 RETURNING balance`, [transaction.amount, parseInt(transaction.sid)]);
                 // Log the transaction in Payment_History
-                const time = new Date();
+                time = new Date();
                 await t.none(
-                    `UPDATE "External_Transaction" SET  success=$1, timestamp=$2, afteramount=$3 WHERE txnid=$4`,
-                    [true, time, amount, txnid]
+                    `UPDATE "External_Transaction" SET  success=$1, timestamp=$2, beforeamount=$5, afteramount=$3 WHERE txnid=$4`,
+                    [true, time, amount.balance, txnid, user.balance]
                 );
 
                 // Add audit log entry
@@ -123,7 +134,7 @@ class ExternalPaymentController {
                     `Payment of ${transaction.amount} has been made via UPI with txnid ${txnid} by user ID ${transaction.sid}.`
                 );
             });
-            res.status(200).json({ success: true, message: 'Payment completed successfully.', txnid });
+            res.status(200).json({ success: true, message: 'Payment completed successfully.', txnid, transaction:{paid_at: time} });
         } catch (error) {
             console.error('Unexpected error:', error);
             return res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -137,7 +148,7 @@ class ExternalPaymentController {
                 url: 'https://api.razorpay.com/v1/payouts',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Basic ${X_Auth_HEADER()}`,
+                    'Authorization': `Basic ${Buffer.from(`${razorpayId}:${razorpayKey}`).toString('base64')}`,
                     'X-Payout-Idempotency': uuidv4(),
                 },
                 body: {
@@ -194,7 +205,7 @@ class ExternalPaymentController {
                 url: 'https://api.razorpay.com/v1/contacts',  // Replace with your API URL
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Basic ${X_Auth_HEADER()}`,  // Add Razorpay API Key or any other needed
+                    'Authorization': `Basic ${Buffer.from(`${razorpayId}:${razorpayKey}`).toString('base64')}`,  // Add Razorpay API Key or any other needed
                 },
                 body: {
                     name: name,
@@ -224,7 +235,7 @@ class ExternalPaymentController {
                 url: 'https://api.razorpay.com/v1/fund_accounts',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Basic ${X_Auth_HEADER()}`,
+                    'Authorization': `Basic ${Buffer.from(`${razorpayId}:${razorpayKey}`).toString('base64')}`,
                 },
             };
             const contact = await this.httpRequest.makeRequest({

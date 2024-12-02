@@ -9,7 +9,7 @@ export default function QRCodeScanner() {
   };
 
   const handleError = (err) => {
-    console.error("QR Scanner Error:", err);
+    console.log("QR Scanner Error:", err);
   };
 
   return (

@@ -1,3 +1,8 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": "next/core-web-vitals", // Or any other ESLint config you're using
+  "rules": {
+    "no-unused-vars": "off",  // Disable no-unused-vars rule
+    "react/jsx-uses-react": "off",  // Disable React-specific rule
+    "react/react-in-jsx-scope": "off" // Disable React in scope rule (if using React 17 JSX Transform)
+  }
 }

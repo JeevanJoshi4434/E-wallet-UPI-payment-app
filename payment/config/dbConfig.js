@@ -1,6 +1,6 @@
 // config/dbConfig.js
 module.exports = {
-    host: 'localhost',
+    host: process.env.POSTGRES_HOST,
     port: 5432,
     database: 'paymentkaro',
     user: 'admin',

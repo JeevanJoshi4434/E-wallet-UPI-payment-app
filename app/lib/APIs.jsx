@@ -279,8 +279,93 @@ async function addConnection(token, connectionId) {
     }
 }
 
+async function initiateUPIPayment(name, upiId, amount, token) {
+    try {
+        if (!upiId || !amount || !token) {
+            return { error: true, success: false, message: "All fields are required", status: 400 };
+        }
+
+        const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_SERVICE_PAYMENT}/api/v1/pay/initiate_upi`,
+            { upiId, amount, name},
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        if (response.data.success) {
+            return { txnid: response.data.txnid, message: response.data.message, success: true, error: false };
+        }
+        return { error: true, success: false, message: "Something went wrong", status: 500 };
+    } catch (error) {
+        if (error.response && error.response.status) {
+            return { error: true, success: false, message: error.response.data.message || "Something went wrong", status: error.response.status };
+        }
+        return { error: true, success: false, message: "Something went wrong", status: 500 };
+    }
+}
+
+async function verifyUPIPayment(pin, txnid, token) {
+    try {
+        if (!pin || !txnid || !token) {
+            return { error: true, success: false, message: "All fields are required", status: 400 };
+        }
+
+        const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_SERVICE_PAYMENT}/api/v1/pay/verify_pin`,
+            { pin, txnid },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        if (response.data.success) {
+            return { txnid: response.data.txnid, message: response.data.message || "verification successful", success: true };
+        }
+        return { error: true, success: false, message: "Something went wrong", status: 500 };
+    } catch (error) {
+        if (error.response && error.response.status) {
+            return { error: true, success: false, message: error.response.data.message || "Something went wrong", status: error.response.status };
+        }
+        return { error: true, success: false, message: "Something went wrong", status: 500 };
+    }
+}
+
+async function PayWithUPI(txnid, token) {
+    try {
+        if (!txnid || !token) {
+            return { error: true, success: false, message: "All fields are required", status: 400 };
+        }
+
+        const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_SERVICE_PAYMENT}/api/v1/upi/pay`,
+            {txnid },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        if (response.data.success) {
+            return { txnid: response.data.txnid, success: true, message: response.data.message || "Payment successful", transaction: response.data.transaction};
+        }
+        return { error: true, success: false, message: "Something went wrong", status: 500 };
+    } catch (error) {
+        if (error.response && error.response.status) {
+            return { error: true, success: false, message: error.response.data.message, status: error.response.status };
+        }
+        return { error: true, success: false, message: "Something went wrong", status: 500 };
+    }
+}
+
 
 
 
  
-export { fetchUser,fetchNumber,fetchConnections, addConnection, getConnections, getPaymentHistory, getBalance, fetchReciever, Pay, initiatePayment, verifyPayment, fetchLoggedInUser };
+export { fetchUser, initiateUPIPayment, verifyUPIPayment, PayWithUPI, fetchNumber,fetchConnections, addConnection, getConnections, getPaymentHistory, getBalance, fetchReciever, Pay, initiatePayment, verifyPayment, fetchLoggedInUser };

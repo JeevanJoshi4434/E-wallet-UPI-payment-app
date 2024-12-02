@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const db = require('../db/index');
 const { redisClient } = require('../config/redisConfig');
 const { v4: uuidV4 } = require('uuid');
@@ -205,6 +205,7 @@ exports.completePayment = async (req, res) => {
     const { sId, rId, amount, txnid } = req.body;
 
     try {
+        
         await db.tx(async (t) => {
             const transaction = await db.oneOrNone(`SELECT * FROM "Payment_History" WHERE txnid = $1`, [txnid]);
             if (!transaction.pending) {
@@ -248,5 +249,83 @@ exports.completePayment = async (req, res) => {
         );
 
         res.status(error.status || 500).json({ success: false, message: error.message || 'Internal Server Error' });
+    }
+};
+
+
+
+/**
+ * Check for potential fraudulent transactions.
+ * @param {Object} transactionDetails - The transaction details to evaluate.
+ * @param {number} transactionDetails.sId - Sender ID.
+ * @param {number} transactionDetails.rId - Receiver ID.
+ * @param {number} transactionDetails.amount - Transaction amount.
+ * @param {string} transactionDetails.txnid - Transaction ID.
+ * @returns {Promise<boolean>} - Returns `true` if the transaction is safe, otherwise `false`.
+ */
+const checkFraud = async (transactionDetails) => {
+    try {
+        const response = await axios.post('http://127.0.0.1:5000/transaction_check', transactionDetails);
+        if (response.status === 200 && !response.data.is_fraud) {
+            return true; // Transaction is not fraudulent
+        }
+        console.warn('Fraud check flagged transaction:', response.data);
+        return false; // Transaction flagged as potentially fraudulent
+    } catch (error) {
+        console.error('Error during fraud check:', error);
+        throw new Error('Fraud check service unavailable.');
+    }
+};
+
+
+const checkFraudFreq = async (transaction, sender, receiver) => {
+    try {
+        // Example fraud detection conditions
+        const {
+            sId, 
+            rId, 
+            amount, 
+            txnid, 
+            paid_at
+        } = transaction;
+
+        // Check for unusually high transaction amount
+        const highAmountThreshold = parseFloat(process.env.HIGH_AMOUNT_THRESHOLD) || 10000;
+        if (parseFloat(amount) > highAmountThreshold) {
+            return { isFraud: true, reason: `Transaction amount exceeds threshold: ${highAmountThreshold}` };
+        }
+
+        // Check for unusually frequent transactions from the sender
+        const frequentTxnThreshold = parseInt(process.env.FREQUENT_TXN_THRESHOLD) || 5;
+        const timeWindowMinutes = parseInt(process.env.FREQUENT_TXN_TIME_WINDOW) || 60;
+
+        const recentTransactions = await db.any(
+            `SELECT COUNT(*) AS txnCount FROM "Payment_History" 
+             WHERE "sId" = $1 AND "paid_at" >= NOW() - INTERVAL '${timeWindowMinutes} minutes'`,
+            [sId]
+        );
+
+        if (parseInt(recentTransactions[0].txnCount) > frequentTxnThreshold) {
+            return { isFraud: true, reason: `Too many transactions (${recentTransactions[0].txnCount}) within ${timeWindowMinutes} minutes.` };
+        }
+
+        // Check for sender and receiver being the same account
+        if (sId === rId) {
+            return { isFraud: true, reason: 'Sender and receiver accounts are identical.' };
+        }
+
+        // Validate receiver's account for suspicious activity (e.g., newly created)
+        const accountAgeThresholdDays = parseInt(process.env.ACCOUNT_AGE_THRESHOLD_DAYS) || 30;
+        const receiverCreationDate = new Date(receiver.created_at);
+        const daysSinceCreation = (Date.now() - receiverCreationDate) / (1000 * 60 * 60 * 24);
+
+        if (daysSinceCreation < accountAgeThresholdDays) {
+            return { isFraud: true, reason: `Receiver account is too new: ${Math.floor(daysSinceCreation)} days old.` };
+        }
+
+        return { isFraud: false }; // No fraud detected
+    } catch (error) {
+        console.error('Error during fraud check:', error);
+        return { isFraud: true, reason: 'Internal fraud detection error.' };
     }
 };

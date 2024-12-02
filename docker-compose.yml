@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  nextjs-app:
+    build:
+      context: ./app
+    container_name: payment-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SERVICE_MAIN=http://103.141.90.248:4000
+      - NEXT_PUBLIC_SERVICE_PAYMENT=http://103.141.90.248:5000
+      - NEXT_PUBLIC_PRODUCTION=PRODUCTION
+      - URL=http://103.141.90.248:3000
+      - NEXT_PUBLIC_URL=http://103.141.90.248:3000
+      - SALT=10
+      - NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_4F2Cw7qARk2jqG
+      - NEXT_PUBLIC_RAZORPAY_KEY_SECRET=sVxc3KqwmBg7VUt9NxNA8cSb
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - ./app:/usr/src/app
+    restart: always
+    command: "npm run dev"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - app-network
+
+  main-service:
+    build:
+      context: ./main
+    container_name: main-service
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - PORT=4000
+      - SALT=10
+      - JWT_SECRET="PAY$AS$YOU$GO@!@"
+      - OTP_TTL=300
+      - PAYMENT_REQUEST_TTL=600
+      - QUICK_TTL=120
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - ./main:/usr/src/main
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  payment-service:
+    build:
+      context: ./payment
+    container_name: payment-service
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - PORT=5000
+      - SALT=10
+      - JWT_SECRET=secret
+      - OTP_TTL=300
+      - PAYMENT_REQUEST_TTL=600
+      - QUICK_TTL=120
+      - cashfreePayoutClientId=CF10346080CSQR336U5O6S73C0LQIG
+      - cashfreePayoutClientSecret=cfsk_ma_test_d373bc3158aa110a3395b5af7b9de4fc_d87d3417
+      - cashfreeGatewayClientId=TEST10346080913f679be6f3ef0f65de08064301
+      - cashfreeGatewayClientSecret=cfsk_ma_test_6c07a15b220768469149e2a060df96b6_9c9e5ae4
+      - RAZORPAY_KEY_ID=rzp_test_RKaU1dR6W1sTBd
+      - RAZORPAY_KEY_SECRET=3fzDjLARvRcsKlo0FXmtwkbC
+      - RAZORPAY_ACCOUNT_NUMBER=2323230012154222
+      - RAZORPAY_GATEWAY_KEY_ID=rzp_test_4F2Cw7qARk2jqG
+      - RAZORPAY_GATEWAY_KEY_SECRET=sVxc3KqwmBg7VUt9NxNA8cSb
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - ./payment:/usr/src/pay
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin@123
+      POSTGRES_DB: paymentkaro
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  postgres-data:
+
+networks:
+  app-network:
+    driver: bridge
