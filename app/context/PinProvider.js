@@ -87,7 +87,7 @@ export function PinProvider({ children }) {
     // Check session on mount
     useEffect(() => {
         const sessionActive = sessionStorage.getItem('verified');
-        if (sessionActive) {
+        if (JSON.parse(sessionActive) === true) {
             setIsVerified(true);
             setLoader(false);
         } else {

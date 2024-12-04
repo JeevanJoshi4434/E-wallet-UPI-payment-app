@@ -2,6 +2,7 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import jsQR from "jsqr";
 import { verifyTime } from "../utils/time";
+import Link from "next/link";
 
 export default function Scanner({ onScan, onError, onClose }) {
     const videoRef = useRef(null);
@@ -10,7 +11,7 @@ export default function Scanner({ onScan, onError, onClose }) {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isScannerOpen, setIsScannerOpen] = useState(true); // New state to control scanner open status
-
+    const [url, setUrl] = useState("");
     const initializeCamera = useCallback(async () => {
         if (!isScannerOpen) return; // Only initialize camera if scanner is open
 
@@ -74,7 +75,7 @@ export default function Scanner({ onScan, onError, onClose }) {
                 stopCamera(); // Stop the camera once code is found
                 // console.log(code.data);
                 const red = redirectURL(code.data === typeof String ? JSON.parse(code.data) : code.data.toString());
-                
+
             } else if (scanning) {
                 requestAnimationFrame(tick);
             }
@@ -86,16 +87,18 @@ export default function Scanner({ onScan, onError, onClose }) {
             window.alert("QR isn't working anymore. Request a new one.");
         }
         if (QRData && QRData.type && QRData.type === 1) {
+            setUrl(QRData.payURL);
             window.location.href = QRData.payURL;
-        }else if(QRData) {
+        } else if (QRData) {
             const upiRegex = /^upi:\/\/pay\?.+/;
-            if(!upiRegex.test(QRData)) {
+            if (!upiRegex.test(QRData)) {
                 return false;
             }
             const payURL = `${process.env.NEXT_PUBLIC_URL}/payment/pay?${QRData.slice(10, QRData.length)}&&type=upi`;
+            setUrl(payURL);
             window.location.href = payURL;
         }
-         else {
+        else {
             return false;
         }
     }
@@ -122,7 +125,7 @@ export default function Scanner({ onScan, onError, onClose }) {
             {loading && <p>Loading camera...</p>}
             {data && (
                 <div className="scanned-data">
-                    <p>Redirecting</p>
+                    <Link href={url}>Redirecting (if not redirected click here)</Link>
                 </div>
             )}
             {!data && !loading && <p>Scanning for QR Code...</p>}

@@ -341,7 +341,7 @@ export function PaymentHomepage() {
               !information.paymentHistory_loader ?
                 <>
                   {
-                    information.paymentHistory.length > 0 &&
+                    information?.paymentHistory?.length > 0 &&
                     information.paymentHistory.map((connection, index) => (
                       <Card key={index}>
                         <CardHeader>
