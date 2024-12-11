@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Scanner from '@/components/component/CustomScanner.jsx'
+import Link from "next/link";
 export default function QRCodeScanner() {
   const [scanResult, setScanResult] = useState(null);
 

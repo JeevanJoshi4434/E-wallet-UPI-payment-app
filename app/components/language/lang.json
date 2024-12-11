@@ -3,12 +3,12 @@
         "title": "PaymentKaro",
         "landingPage": {
             "section1": {
-                "title": "Ops! Bank server Error? and you don't have cash? Don't worry, Here we have Payment Karo!",
-                "desc": "Payment Karo is the app that allows you to conduct online transactions without involving banks. Send and receive money through your e-wallet, no more bank hassles."
+                "title": "Ops! Bank server Error? and you don't have cash? Don't worry, Here we have WalletXpress!",
+                "desc": "WalletXpress is the app that allows you to conduct online transactions without involving banks. Send and receive money through your e-wallet, no more bank hassles."
             },
             "keyFeature": {
-                "title": "Key Features of Payment Karo",
-                "desc": "Payment Karo Offers a seamsless and secure way to manage your finances without the hassle of banks",
+                "title": "Key Features of WalletXpress",
+                "desc": "WalletXpress Offers a seamsless and secure way to manage your finances without the hassle of banks",
                 "features": [
                     {
                         "title": "E-wallet",
@@ -16,7 +16,7 @@
                     },
                     {
                         "title": "Instant Transections",
-                        "desc": "Enjoy lightning-fast transactions with Payment Karo, no more waiting for bank approvals."
+                        "desc": "Enjoy lightning-fast transactions with WalletXpress, no more waiting for bank approvals."
                     },
                     {
                         "title": "Secure Payments",
@@ -25,8 +25,8 @@
                 ]
             },
             "workFlow": {
-                "title": "How Payment Karo Works",
-                "desc": "Discover the simple steps to start using payment Karo and manage your finances with ease",
+                "title": "How WalletXpress Works",
+                "desc": "Discover the simple steps to start using WalletXpress and manage your finances with ease",
                 "steps": [
                     {
                         "title": "Recharge Your Wallet",
@@ -44,10 +44,10 @@
             },
             "review": {
                 "title": "What Our Users Say",
-                "desc": "Hear from our satisfied cunsomers and see why the love using Payment Karo"
+                "desc": "Hear from our satisfied cunsomers and see why the love using WalletXpress"
             }
         },
-        "getStartedWithPaymentKaro": "Get Started with Payment Karo",
+        "getStartedWithPaymentKaro": "Get Started with WalletXpress",
         "getStarted": "Get Started",
         "learnMore": "Learn More"
     },

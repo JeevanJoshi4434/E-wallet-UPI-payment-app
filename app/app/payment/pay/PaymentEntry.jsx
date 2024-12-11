@@ -16,7 +16,7 @@ const PaymentEntry = ({ amount, setAmount = () => { }, stage = 1, setStage = () 
     return (
         <>
             <h1 className='text-xl text-center font-semibold'>
-                Payment Karo
+                WalletXpress
                 <br />
                 <p className="text-xs text-muted-foreground ">A simplest way to transfer money without any hassle.</p>
             </h1>
@@ -93,14 +93,19 @@ const PaymentEntry = ({ amount, setAmount = () => { }, stage = 1, setStage = () 
                                                 value={amount}
                                                 min={1} />
                                         </div>
-                                        <textarea onChange={(e) => setNote(e.target.value)} value={note} name="note" placeholder='Add Note' className='w-[250px] outline-none p-1 border rounded-md border-input'></textarea>
-                                        <div className=' min-w-[240px] w-[280px] p-1 flex items-center flex-wrap gap-2'>
-                                            <span onClick={(e) => setNote(`Happy Birthday ${data.user.name}!`)} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Happy Birthday {data.user.name}!</span>
-                                            <span onClick={(e) => setNote("PS5 le lena")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>PS5 le lena</span>
-                                            <span onClick={(e) => setNote("Party from my side!")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Party from my side!</span>
-                                            <span onClick={(e) => setNote("Enjoy your day ;)")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Enjoy your day ;)</span>
-                                            <span onClick={(e) => setNote("Have some cookies")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Have some cookies</span>
-                                        </div>
+                                        {
+                                            data.type !== "upi" &&
+                                            <>
+                                                <textarea onChange={(e) => setNote(e.target.value)} value={note} name="note" placeholder='Add Note' className='w-[250px] outline-none p-1 border rounded-md border-input'></textarea>
+                                                <div className=' min-w-[240px] w-[280px] p-1 flex items-center flex-wrap gap-2'>
+                                                    <span onClick={(e) => setNote(`Happy Birthday ${data.user.name}!`)} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Happy Birthday {data.user.name}!</span>
+                                                    <span onClick={(e) => setNote("PS5 le lena")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>PS5 le lena</span>
+                                                    <span onClick={(e) => setNote("Party from my side!")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Party from my side!</span>
+                                                    <span onClick={(e) => setNote("Enjoy your day ;)")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Enjoy your day ;)</span>
+                                                    <span onClick={(e) => setNote("Have some cookies")} className=' cursor-pointer text-sm p-2 border border-input rounded-full font-semibold text-gray-500'>Have some cookies</span>
+                                                </div>
+                                            </>
+                                        }
                                     </>
                                     :
                                     <>
@@ -148,8 +153,8 @@ const PaymentEntry = ({ amount, setAmount = () => { }, stage = 1, setStage = () 
                     <button onClick={initiatePayment} disabled={data.stage_1_Loader} className={` ${!showPaymentPanel && 'hidden'} transition-all duration-500  ${payButtonStatus ? 'w-0' : 'w-full'} flex items-center text-center justify-center rounded-full text-black bg-white hover:bg-gray-100 font-semibold p-2 `}>{!data.stage_1_Loader ? `${!payButtonStatus && "Pay Now"}` : <FaSpinner className='spin' />}</button>
                     {data.error && <p className='text-red-500 text-xs w-full justify-center flex items-center gap-2'> <MdOutlineErrorOutline /> {data.error}</p>}
                     {!payButtonStatus && <button onClick={() => setShowPaymentPanel(false)} className={` ${!showPaymentPanel && 'hidden'} w-full rounded-full transition-all duration-500  text-white bg-red-500 font-semibold p-2`}>Cancel</button>}
-                    {/* <p className='absolute text-lg font-bold bottom-5 left-2'>{user.name} | Payment Karo</p> */}
-                    {/* <p className='absolute text-xs bottom-1 right-2 flex items-center'>Payment Karo<sup>&copy;</sup>{new Date().getFullYear()} </p> */}
+                    {/* <p className='absolute text-lg font-bold bottom-5 left-2'>{user.name} | WalletXpress</p> */}
+                    {/* <p className='absolute text-xs bottom-1 right-2 flex items-center'>WalletXpress<sup>&copy;</sup>{new Date().getFullYear()} </p> */}
                 </div>
             </div>
         </>

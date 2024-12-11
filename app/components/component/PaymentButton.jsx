@@ -29,7 +29,7 @@ export default function PaymentButton({ amount, setSuccess, showPaymentPanel, pa
         key: RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
-        name: "Payment Karo",
+        name: "WalletXpress",
         description: `Recharge your account with Razorpay, pay now (${order.currency} ${order.amount})`,
         order_id: order.id,
         handler: async (response) => {

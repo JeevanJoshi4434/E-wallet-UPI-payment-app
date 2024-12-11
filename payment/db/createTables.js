@@ -3,7 +3,7 @@ const db = require('./index');
 
 async function createTables() {
   const query = `
-CREATE TABLE IF NOT EXISTS "User" (
+      CREATE TABLE IF NOT EXISTS "User" (
         id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
         name VARCHAR,
         number BIGINT UNIQUE NOT NULL,
@@ -17,6 +17,28 @@ CREATE TABLE IF NOT EXISTS "User" (
         contact_no VARCHAR,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "Bank_Details" (
+        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        user_id BIGINT REFERENCES "User"(id),
+        name VARCHAR,
+        bank_name VARCHAR,
+        account_number VARCHAR,
+        ifsc_code VARCHAR
+      );
+
+      CREATE TABLE IF NOT EXISTS "Payout" (
+        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        user_id BIGINT REFERENCES "User"(id),
+        amount DECIMAL(10, 2),
+        bank_name VARCHAR,
+        account_number VARCHAR,
+        ifsc_code VARCHAR,
+        name VARCHAR,
+        status VARCHAR,
+        txnid VARCHAR,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS "Partner" (
@@ -101,8 +123,8 @@ CREATE TABLE IF NOT EXISTS "User" (
         userid BIGINT REFERENCES "User"(id),
         action VARCHAR,
         description VARCHAR,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      )
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
 
       CREATE TABLE IF NOT EXISTS "External_Transaction" (
         id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -129,7 +151,7 @@ CREATE TABLE IF NOT EXISTS "User" (
         receipt VARCHAR,
         verified BOOLEAN DEFAULT FALSE,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
+        );
   `;
 
   try {

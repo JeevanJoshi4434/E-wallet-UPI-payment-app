@@ -232,10 +232,74 @@ async function getConnections(token) {
         return { error: true, success: false, message: "Something went wrong", status: 500 };
     }
 }
-
-async function getPaymentHistory(token) {
+async function getUser(token, id) {
     try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_MAIN}/api/v1/get/payment_history`,
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_MAIN}/api/v1/user?userID=${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        if (response.data.success) {
+            return { user: response.data.user, message: response.data.message, success: true };
+        } else {
+            return { error: true, success: false, message: "Something went wrong", status: 500 };
+        }
+    } catch (error) {
+        if (error.response && error.response.status) {
+            return { error: true, success: false, message: error.response.data.message || "Something went wrong", status: error.response.status || 500 };
+        }
+        return { error: true, success: false, message: "Something went wrong", status: 500 };
+    }
+}
+async function getBank(token) {
+    try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_MAIN}/api/v1/bank`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        if (response.data.success) {
+            return { user: response.data.bankDetails, message: response.data.message, success: true };
+        } else {
+            return { error: true, success: false, message: "Something went wrong", status: 500 };
+        }
+    } catch (error) {
+        if (error.response && error.response.status) {
+            return { error: true, success: false, message: error.response.data.message || "Something went wrong", status: error.response.status || 500 };
+        }
+        return { error: true, success: false, message: "Something went wrong", status: 500 };
+    }
+}
+
+async function getUserPaymentHistory(token, id) {
+    if(!id) return { error: true, success: false, message: "All fields are required", status: 400 };
+    try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_MAIN}/api/v1/get/payment_history/user?Id=${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        if (response.data.success) {
+            return { history: response.data.paymentHistory, message: response.data.message, success: true };
+        } else {
+            return { error: true, success: false, message: "Something went wrong", status: 500 };
+        }
+    } catch (error) {
+        if (error.response && error.response.status) {
+            return { error: true, success: false, message: error.response.data.message || "Something went wrong", status: error.response.status || 500 };
+        }
+        return { error: true, success: false, message: "Something went wrong", status: 500 };
+    }
+}
+async function getPaymentHistory(token, page=0, limit=4) {
+    try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_MAIN}/api/v1/get/payment_history?page=${page}&limit=${limit}`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -307,6 +371,34 @@ async function initiateUPIPayment(name, upiId, amount, token) {
         return { error: true, success: false, message: "Something went wrong", status: 500 };
     }
 }
+async function bankPayout(ifsc_code, bank_name, account_number, amount, name="", token) {
+    try {
+        if (!amount || !token || !ifsc_code || !bank_name || !account_number) {
+            return { error: true, success: false, message: "All fields are required", status: 400 };
+        }
+
+        const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_SERVICE_PAYMENT}/api/v1/payout`,
+            { amount, name, ifsc_code, bank_name, account_number },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        if (response.data.success) {
+            return { txnid: response.data.txnid, message: response.data.message, success: true, error: false };
+        }
+        return { error: true, success: false, message: response.data.message || "Something went wrong", status: 500 };
+    } catch (error) {
+        if (error.response) {
+            return { error: true, success: false, message: error.response.data.message || "Something went wrong", status: error.response.status };
+        }
+        return { error: true, success: false, message: "Something went wrong", status: 500 };
+    }
+}
 
 async function verifyUPIPayment(pin, txnid, token) {
     try {
@@ -368,4 +460,4 @@ async function PayWithUPI(txnid, token) {
 
 
  
-export { fetchUser, initiateUPIPayment, verifyUPIPayment, PayWithUPI, fetchNumber,fetchConnections, addConnection, getConnections, getPaymentHistory, getBalance, fetchReciever, Pay, initiatePayment, verifyPayment, fetchLoggedInUser };
+export { fetchUser,bankPayout, initiateUPIPayment, getUser, getBank,  getUserPaymentHistory, verifyUPIPayment, PayWithUPI, fetchNumber,fetchConnections, addConnection, getConnections, getPaymentHistory, getBalance, fetchReciever, Pay, initiatePayment, verifyPayment, fetchLoggedInUser };

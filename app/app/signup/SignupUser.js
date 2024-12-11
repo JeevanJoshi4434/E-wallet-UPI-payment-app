@@ -154,7 +154,7 @@ export default function SignupWindow() {
                 <div
                     className="w-full max-w-md space-y-6 rounded-lg border border-input bg-card p-6 shadow-lg">
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-bold">Welcome to Payment Karo</h2>
+                        <h2 className="text-2xl font-bold">Welcome to WalletXpress</h2>
                         <p className="text-muted-foreground">{fields.screen === 0 ? "Enter your mobile number to get started." : fields.screen === 1 ? "Enter your name by which people can recognise you." : fields.screen === 2 ? "Setup your pin for login" : "Enter your OTP"}</p>
                     </div>
                     <form className="space-y-4">

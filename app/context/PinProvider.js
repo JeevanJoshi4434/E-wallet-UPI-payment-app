@@ -97,10 +97,10 @@ export function PinProvider({ children }) {
 
     // Auto-lock on window blur
     const handleWindowBlur = useCallback(() => {
-        if (process.env.NEXT_PUBLIC_PRODUCTION === "PRODUCTION" && window.location.pathname !== '/balance/add') {
-            setIsVerified(false);
-            sessionStorage.removeItem('verified');
-        }
+        // if (process.env.NEXT_PUBLIC_PRODUCTION === "PRODUCTION" && window.location.pathname !== '/balance/add') {
+            // setIsVerified(false);
+            // sessionStorage.removeItem('verified');
+        // }
     }, []);
 
     useEffect(() => {
@@ -113,7 +113,7 @@ export function PinProvider({ children }) {
         return (
             <div className="pin-prompt bg-black h-screen items-center justify-center flex flex-col">
                 <LoaderIcon className='spin' color='white' size={30} />
-                <h1 style={{ color: "white" }} className='w-full text-center text-2xl text-white font-semibold'>Payment Karo Loading...</h1>
+                <h1 style={{ color: "white" }} className='w-full text-center text-2xl text-white font-semibold'>WalletXpress Loading...</h1>
             </div>
         )
     } else
@@ -128,7 +128,7 @@ export function PinProvider({ children }) {
                                 <div className='w-full items-center justify-center flex'>
                                     <CiLock color='white' size={30} />
                                 </div>
-                                <h1 style={{ color: "white" }} className='w-full text-center text-2xl text-white font-semibold'>Payment Karo Locked</h1>
+                                <h1 style={{ color: "white" }} className='w-full text-center text-2xl text-white font-semibold'>WalletXpress Locked</h1>
                                 <h4 style={{ color: "white" }} className='text-white text-xs'>The world is so risky <br /> And we care about your privacy!</h4>
                                 <p style={{ color: "white" }} className="text-sm text-white">Enter your PIN</p>
                                 <div className="flex gap-2">

@@ -99,7 +99,7 @@ export function LoginWindow() {
       <div
         className="w-full max-w-md space-y-6 rounded-lg border border-input bg-card p-6 shadow-lg">
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold">Welcome to Payment Karo</h2>
+          <h2 className="text-2xl font-bold">Welcome to WalletXpress</h2>
           <p className="text-muted-foreground">Enter your mobile number to get started.</p>
         </div>
         <form className="space-y-4">

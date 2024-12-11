@@ -47,7 +47,7 @@ const PINEntry = ({stage=2, setStage=()=>{}, data, verifyPIN=()=>{}}) => {
                     <div className='w-full items-center justify-center flex'>
                         <SiContactlesspayment color='white' size={40} />
                     </div>
-                    <h1 style={{ color: "white" }} className='w-full text-center text-2xl text-white font-semibold'>Payment Karo</h1>
+                    <h1 style={{ color: "white" }} className='w-full text-center text-2xl text-white font-semibold'>WalletXpress</h1>
                     <h4 style={{ color: "white" }} className='text-white text-xs w-full text-center'>A cashless way to pay.</h4>
                     <p style={{ color: "white" }} className="text-sm text-white text-center w-full">Enter your PIN to Pay</p>
                     <div className="flex gap-2">

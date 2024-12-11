@@ -90,6 +90,7 @@ const PayViaPIN = () => {
         try {
             setData({ ...data, stage_1_Loader: true, error: '' });
             const response = data.type === "upi" ? await initiateUPIPayment( data.name || "User", data.payID, amount, token) : await initiatePayment(user.id, data.user.id, amount, token, note);
+                console.log(response);
             if (response.success) {
                 setpayButtonHidden(true);
                 setTimeout(() => {

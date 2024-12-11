@@ -160,7 +160,7 @@ export function PaymentHomepage() {
         <div className="flex items-center gap-4">
           <Link href="#" className="flex items-center gap-2" prefetch={false}>
             <Package2Icon className="h-6 w-6" />
-            <span className="font-semibold">Payment Karo</span>
+            <span className="font-semibold">WalletXpress</span>
           </Link>
         </div>
         <div className="flex items-center gap-4">
@@ -178,7 +178,7 @@ export function PaymentHomepage() {
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={toggleQRModal}>View QR</DropdownMenuItem>
-              <DropdownMenuItem>Transactions</DropdownMenuItem>
+              <DropdownMenuItem onClick={()=> window.location.href = "/history/payments"}>Transactions</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logOut}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
@@ -255,7 +255,7 @@ export function PaymentHomepage() {
           <Button size="lg" className="flex flex-col items-center justify-center gap-2">
             <span>Request Money</span>
           </Button>
-          <Button size="lg" className="flex flex-col items-center justify-center gap-2">
+          <Button onClick={()=>{window.location.href = "/payout"}} size="lg" className="flex flex-col items-center justify-center gap-2">
             <span>Withdraw</span>
           </Button>
         </div>
@@ -330,9 +330,9 @@ export function PaymentHomepage() {
         <div className="px-4 py-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Recent Payments</h2>
-            <Button variant="outline" size="sm">
+            <Button onClick={() => window.location.href = "/history/payments"} variant="outline" size="sm">
               <EyeIcon className="h-4 w-4" />
-              <Link href="/payment_history">View All</Link>
+              <Link href={"/history/payments"} >View All</Link>
             </Button>
           </div>
           <div
@@ -349,26 +349,28 @@ export function PaymentHomepage() {
                             {
                               connection.method === "vpa" ?
                                 <Image src={"/UPI.svg"} width={50} height={32} alt="upi" />
-                                :
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src="/placeholder-user.svg" alt="@shadcn" />
-                                  <AvatarFallback>AC</AvatarFallback>
-                                </Avatar>
+                                : connection.method === "recharge" ?
+                                  <Image src={"/landingPage/recharge.png"} width={20} height={15} alt="recharge" />
+                                  :
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage src="/placeholder-user.svg" alt="@shadcn" />
+                                    <AvatarFallback>AC</AvatarFallback>
+                                  </Avatar>
                             }
                             <div>
                               {
                                 connection.method === "vpa" ?
                                   <>
-                                  {
-                                    JSON.parse(connection.details).name ?
-                                    <div className="flex flex-col items-start justify-start">
-                                    <div className="font-medium text-sm">{JSON.parse(connection.details).name}</div>
-                                    <div className=" font-semibold text-muted-foreground text-xs">{JSON.parse(connection.details).address}</div>
-                                    </div>
-                                    :
-                                    <div className="font-medium text-sm">{JSON.parse(connection.details).address}</div>
+                                    {
+                                      JSON.parse(connection.details).name ?
+                                        <div className="flex flex-col items-start justify-start">
+                                          <div className="font-medium text-sm">{JSON.parse(connection.details).name}</div>
+                                          <div className=" font-semibold text-muted-foreground text-xs">{JSON.parse(connection.details).address}</div>
+                                        </div>
+                                        :
+                                        <div className="font-medium text-sm">{JSON.parse(connection.details).address}</div>
 
-                                  }
+                                    }
                                   </>
                                   :
                                   <div className="font-medium">{connection.name}</div>
@@ -379,8 +381,18 @@ export function PaymentHomepage() {
                         </CardHeader>
                         <CardContent>
                           <div className="flex items-center justify-between">
-                            <div className={`text-lg ${user.id === connection.sId ? "text-red-500" : 'text-green-700'}  font-bold`}>{user.id === connection.sId ? "-" : "+"} ₹{connection.amount}</div>
-                            <Badge variant="secondary">{user.id === connection.sId ? "Sent" : "Received"}</Badge>
+                            {
+                              connection.method === "recharge" ?
+                                <>
+                                  <div className={`text-lg text-green-700  font-bold`}>+ ₹{connection.amount}</div>
+                                  <Badge variant="secondary">Recharged</Badge>
+                                </>
+                                :
+                                <>
+                                  <div className={`text-lg ${user.id === connection.sId ? "text-red-500" : 'text-green-700'}  font-bold`}>{user.id === connection.sId ? "-" : "+"} ₹{connection.amount}</div>
+                                  <Badge variant="secondary">{user.id === connection.sId ? "Sent" : "Received"}</Badge>
+                                </>
+                            }
                           </div>
                           <p className="text-sm text-gray-500 font-semibold">{connection?.note?.length > 60 ? `${connection?.note?.slice(0, 59)}...` : connection.note}</p>
                         </CardContent>
@@ -585,7 +597,7 @@ function TriangleAlertIcon(props) {
 }
 
 
-const HistoryLoader = () => {
+export const HistoryLoader = () => {
   return (
     <Card >
       <CardHeader>

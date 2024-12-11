@@ -74,7 +74,7 @@ export default function Scanner({ onScan, onError, onClose }) {
                 onScan && onScan(code.data);
                 stopCamera(); // Stop the camera once code is found
                 // console.log(code.data);
-                const red = redirectURL(code.data === typeof String ? JSON.parse(code.data) : code.data.toString());
+                const red = redirectURL(code.data);
 
             } else if (scanning) {
                 requestAnimationFrame(tick);
@@ -82,7 +82,10 @@ export default function Scanner({ onScan, onError, onClose }) {
         }
     };
 
-    function redirectURL(QRData = null) {
+    function redirectURL(QRData = "") {
+        if(!QRData.startsWith("upi://") && typeof QRData === "string") {
+            QRData = typeof QRData === "string" ? JSON.parse(QRData) : QRData;
+        }
         if (QRData.TTL && !verifyTime(QRData.date, TTL)) {
             window.alert("QR isn't working anymore. Request a new one.");
         }

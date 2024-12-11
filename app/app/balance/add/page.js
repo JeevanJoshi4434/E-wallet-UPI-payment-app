@@ -30,7 +30,7 @@ const Page = () => {
         return (
             <main className='h-screen py-4 px-2'>
                 <h1 className='text-xl text-center font-semibold'>
-                    Payment Karo
+                    WalletXpress
                     <br />
                     <p className="text-xs text-muted-foreground ">A simplest way to transfer money without any hassle.</p>
                 </h1>
@@ -80,8 +80,8 @@ const Page = () => {
                         <PaymentButton setSuccess={setSuccess} showPaymentPanel={showPaymentPanel} payButtonStatus={payButtonStatus} setPayButtonStatus={setPayButtonStatus} amount={amount} />
                         {data.error && <p className='text-red-500 text-xs w-full justify-center flex items-center gap-2'> <MdOutlineErrorOutline /> {data.error}</p>}
                         {!payButtonStatus && <button onClick={() => setShowPaymentPanel(false)} className={` ${!showPaymentPanel && 'hidden'} w-full rounded-full transition-all duration-500  text-white bg-red-500 font-semibold p-2`}>Cancel</button>}
-                        {/* <p className='absolute text-lg font-bold bottom-5 left-2'>{user.name} | Payment Karo</p> */}
-                        {/* <p className='absolute text-xs bottom-1 right-2 flex items-center'>Payment Karo<sup>&copy;</sup>{new Date().getFullYear()} </p> */}
+                        {/* <p className='absolute text-lg font-bold bottom-5 left-2'>{user.name} | WalletXpress</p> */}
+                        {/* <p className='absolute text-xs bottom-1 right-2 flex items-center'>WalletXpress<sup>&copy;</sup>{new Date().getFullYear()} </p> */}
                     </div>
                 </div>
             </main>
@@ -95,7 +95,7 @@ const Page = () => {
                 <p className='font-semibold'>₹{amount}</p>
                 <p className='text-sm font-semibold'>{user.name}</p>
                 <p className='text-sm font-semibold'>{data.user.payid}</p>
-                <p className='text-sm font-semibold'>Thanks for using Payment Karo.</p>
+                <p className='text-sm font-semibold'>Thanks for using WalletXpress.</p>
                 <Link href={"/home"} className='text-sm mt-16 hover:underline'>Continue to Home (<Countdown startCount={5} onComplete={() => { window.location.href = "/home" }} />)</Link>
             </main>
         )

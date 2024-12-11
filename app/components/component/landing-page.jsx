@@ -15,7 +15,7 @@ export function LandingPage() {
       <header className="px-4 lg:px-6 h-14 flex items-center">
         <Link href="#" className="flex items-center justify-center" prefetch={false}>
           <DollarSignIcon className="h-6 w-6" />
-          <span className="text-md font-semibold">Payment Karo</span>
+          <span className="text-md font-semibold">WalletXpress</span>
         </Link>
         <nav className="ml-auto flex gap-4 items-center justify-center sm:gap-6">
           <Link
@@ -205,7 +205,7 @@ export function LandingPage() {
               <div className="flex flex-col justify-center space-y-4">
                 <div className="grid gap-2 rounded-lg bg-card p-4">
                   <p className="text-muted-foreground">
-                    {"Payment Karo has been a game-changer for my business. The instant transactions and secure payments\nhave made managing my finances so much easier."}
+                    {"WalletXpress has been a game-changer for my business. The instant transactions and secure payments\nhave made managing my finances so much easier."}
                   </p>
                   <div className="flex items-center gap-2">
                     <Avatar className="border w-10 h-10">
@@ -220,7 +220,7 @@ export function LandingPage() {
                 </div>
                 <div className="grid gap-2 rounded-lg bg-card p-4">
                   <p className="text-muted-foreground">
-                    {"I love how easy it is to use Payment Karo. The app is intuitive, and I can manage all my\ntransactions without the hassle of banks."}
+                    {"I love how easy it is to use WalletXpress. The app is intuitive, and I can manage all my\ntransactions without the hassle of banks."}
                   </p>
                   <div className="flex items-center gap-2">
                     <Avatar className="border w-10 h-10">
@@ -237,7 +237,7 @@ export function LandingPage() {
               <div className="flex flex-col justify-center space-y-4">
                 <div className="grid gap-2 rounded-lg bg-card p-4">
                   <p className="text-muted-foreground">
-                    {"Payment Karo has been a lifesaver for me. I can now send and receive money without worrying about\nbank issues or delays."}
+                    {"WalletXpress has been a lifesaver for me. I can now send and receive money without worrying about\nbank issues or delays."}
                   </p>
                   <div className="flex items-center gap-2">
                     <Avatar className="border w-10 h-10">
@@ -252,7 +252,7 @@ export function LandingPage() {
                 </div>
                 <div className="grid gap-2 rounded-lg bg-card p-4">
                   <p className="text-muted-foreground">
-                    {"I highly recommend Payment Karo to anyone who wants a hassle-free way to manage their finances.\nIt's been a game-changer for me."}
+                    {"I highly recommend WalletXpress to anyone who wants a hassle-free way to manage their finances.\nIt's been a game-changer for me."}
                   </p>
                   <div className="flex items-center gap-2">
                     <Avatar className="border w-10 h-10">

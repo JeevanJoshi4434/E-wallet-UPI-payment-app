@@ -21,7 +21,7 @@ class ExternalPaymentController {
 
     // Method for initiating UPI payment
     async upiPaymentInitiate(req, res) {
-        const { upiId = "", amount, name="User" } = req.body;
+        const { upiId = "", amount, name = "User" } = req.body;
         try {
             if (!upiId || !amount) return res.status(400).json({ message: 'Missing required parameters' });
             if (!upiId.match(/^[a-zA-Z0-9_-]+@[a-zA-Z0-9]+$/)) {
@@ -37,10 +37,9 @@ class ExternalPaymentController {
             }
 
             const contact = await this.#filterVPA(upiId);
-            console.log(contact);
             if (contact.success) {
                 const recieverID = contact.vpa.id || contact.id;
-                 if(!recieverID) return res.status(400).json({ message: 'Invalid Fund Acccount format' });
+                if (!recieverID) return res.status(400).json({ message: 'Invalid Fund Acccount format' });
                 const user = await db.oneOrNone(`SELECT * FROM "User" WHERE id = $1`, [req.user.id]);
                 if (parseFloat(user.balance) < parseFloat(amount)) {
                     return res.status(400).json({ message: 'Insufficient balance' });
@@ -66,7 +65,7 @@ class ExternalPaymentController {
 
                 const user = await db.oneOrNone(`SELECT * FROM "User" WHERE id = $1`, [req.user.id]);
                 const account = await this.#addUPIAccount(UPIdata.contact_id, UPIdata);
-                if (user.balance < amount) {
+                if (parseFloat(user.balance) < parseFloat(amount)) {
                     return res.status(400).json({ message: 'Insufficient balance' });
                 }
 
@@ -134,7 +133,7 @@ class ExternalPaymentController {
                     `Payment of ${transaction.amount} has been made via UPI with txnid ${txnid} by user ID ${transaction.sid}.`
                 );
             });
-            res.status(200).json({ success: true, message: 'Payment completed successfully.', txnid, transaction:{paid_at: time} });
+            res.status(200).json({ success: true, message: 'Payment completed successfully.', txnid, transaction: { paid_at: time } });
         } catch (error) {
             console.error('Unexpected error:', error);
             return res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -148,7 +147,7 @@ class ExternalPaymentController {
                 url: 'https://api.razorpay.com/v1/payouts',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Basic ${Buffer.from(`${razorpayId}:${razorpayKey}`).toString('base64')}`,
+                    'Authorization': `Basic ${X_Auth_HEADER()}`,
                     'X-Payout-Idempotency': uuidv4(),
                 },
                 body: {
@@ -198,19 +197,21 @@ class ExternalPaymentController {
         }
     }
 
-    async #addContact({ name, type, upiId }) {
+
+    async #addContact({ name, type, id, contactId="" }) {
         try {
             const dynamicRequestConfig = {
                 method: 'POST',
                 url: 'https://api.razorpay.com/v1/contacts',  // Replace with your API URL
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Basic ${Buffer.from(`${razorpayId}:${razorpayKey}`).toString('base64')}`,  // Add Razorpay API Key or any other needed
+                    'Authorization': `Basic ${X_Auth_HEADER()}`,  // Add Razorpay API Key or any other needed
                 },
                 body: {
                     name: name,
                     type: type,
-                    reference_id: `ref-${upiId}`,
+                    contact: contactId,
+                    reference_id: `ref-${id}`,
                 }
             };
             const contact = await this.httpRequest.makeRequest({
@@ -235,7 +236,7 @@ class ExternalPaymentController {
                 url: 'https://api.razorpay.com/v1/fund_accounts',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Basic ${Buffer.from(`${razorpayId}:${razorpayKey}`).toString('base64')}`,
+                    'Authorization': `Basic ${X_Auth_HEADER()}`,
                 },
             };
             const contact = await this.httpRequest.makeRequest({
@@ -248,10 +249,114 @@ class ExternalPaymentController {
         }
     }
 
+    async makePayout(req, res) {
+        try {
+            const { ifsc_code, bank_name, account_number, amount, name = "User" } = req.body;
+            const txnid = generateFixedLengthId(22);
+            const userBalance = await db.oneOrNone(`SELECT balance FROM "User" WHERE id = $1`, [req.user.id]);
+            const userContact = await db.oneOrNone(`SELECT number FROM "User" WHERE id = $1`, [req.user.id]);
+            if (parseFloat(userBalance.balance) < parseFloat(amount)) {
+                return res.status(400).json({ message: 'Insufficient balance.', success: false });
+            }
+            const contact = await this.#filterBankAccount(account_number);
+            if (contact.success) {
+                db.tx(async (t) => {
+                    const details = {
+                        fund_account_id: contact.contact.id,
+                        amount: amount,
+                        currency: "INR",
+                        mode: "IMPS",
+                        purpose: "payout",
+                        reference_id: txnid
+                    }
+                    await t.none(`INSERT INTO "Payout" (user_id, amount, bank_name, account_number, ifsc_code, name, status, txnid) VALUES ($1, $2, $3, $4, $5, $6, $7 , $8)`, [req.user.id, amount, bank_name, account_number, ifsc_code, name, "done", txnid]);
+                    await t.none(`UPDATE "User" SET balance = balance - $1 WHERE id = $2`, [amount, req.user.id]);
+                    await this.#BankTransaction(details);
+                })
+            } else {
+                const newContact = await this.#addContact({ name, type: "customer", id: generateFixedLengthId(10), contact: userContact.number });
+             
+                const data = {
+                    contact_id: newContact.id,
+                    account_type: "bank_account",
+                    name: name,
+                    ifsc: ifsc_code,
+                    account_number
+                }
+
+                const account = await this.#addBankAccount(data.contact_id, data);
+        
+                // create bank account
+                await db.none(`INSERT INTO "Bank_Details" (user_id, name, bank_name, account_number, ifsc_code) VALUES ($1, $2, $3, $4, $5)`, [req.user.id, name, bank_name, account_number, ifsc_code]);
+                db.tx(async (t) => {
+                    const details = {
+                        fund_account_id: account.id,
+                        amount: amount,
+                        currency: "INR",
+                        mode: "IMPS",
+                        purpose: "payout",
+                        reference_id: txnid
+                    }
+                    await t.none(`INSERT INTO "Payout" (user_id, amount, bank_name, account_number, ifsc_code, name, status, txnid) VALUES ($1, $2, $3, $4, $5, $6, $7 , $8)`, [req.user.id, amount, bank_name, account_number, ifsc_code, name, "done", txnid]);
+                    await t.none(`UPDATE "User" SET balance = balance - $1 WHERE id = $2`, [amount, req.user.id]);
+                    await this.#BankTransaction(details);
+                })
+            }
+            res.status(200).json({ success: true, txnid });
+        } catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+
+    async #BankTransaction({ fund_account_id = "", amount = 0, currency = "INR", mode = "IMPS", purpose = "payout", reference_id = "" }) {
+        try {
+            const dynamicRequestConfig = {
+                method: 'POST',
+                url: 'https://api.razorpay.com/v1/payouts',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${X_Auth_HEADER()}`,
+                    'X-Payout-Idempotency': uuidv4(),
+                },
+                body: {
+                    account_number: AccountNumber,
+                    fund_account_id: fund_account_id,
+                    amount: amount * 100,
+                    currency: currency || "INR",
+                    mode: mode || "IMPS",
+                    purpose: purpose,
+                    reference_id: reference_id,
+                },
+            }
+            const response = await this.httpRequest.makeRequest({
+                ...dynamicRequestConfig
+            })
+            return response.status;
+
+        } catch (error) {
+
+        }
+    }
+
+    async #filterBankAccount(account_number = "") {
+        const contacts = await this.#fetchContacts();
+        if (contacts) {
+            const bank_account = contacts.filter((obj) => obj.bank_account && obj.bank_account.account_number === account_number);
+            if (bank_account && bank_account.length > 0) {
+                return { success: true, contact: bank_account[0] };
+            } else {
+                return { success: false };
+            }
+        } else {
+            return { success: false };
+        }
+    }
+
+
     async #filterVPA(upiId = "") {
         const contacts = await this.#fetchContacts();
         if (contacts) {
-            const vpa = contacts.filter((obj) => obj.vpa.address === upiId);
+            const vpa = contacts.filter((obj) => obj.vpa && obj.vpa.address === upiId);
             if (vpa && vpa.length > 0) {
                 return { success: true, vpa: vpa[0] };
             } else {
@@ -261,6 +366,29 @@ class ExternalPaymentController {
             return { success: false };
         }
     }
+
+    async #addBankAccount(contact_id, { account_type = "bank_account", name, ifsc, account_number }) {
+        try {
+            if (!contact_id) {
+                throw new Error("contact id is required");
+            }
+
+            const fundAccount = paymentGateway.fundAccount.create({
+                "contact_id": contact_id,
+                "account_type": account_type,
+                "bank_account": {
+                    "name": name,
+                    "ifsc": ifsc,
+                    "account_number": account_number
+                }
+            });
+            return fundAccount;
+        } catch (error) {
+            console.error('Error adding account:', error);
+            throw error; // Propagate error for handling in the calling method
+        }
+    }
+
 
     // Method for adding a bank account to a contact
     async #addUPIAccount(contact_id, { account_type = "vpa", vpa }) {
@@ -313,12 +441,11 @@ class ExternalPaymentController {
             if (razorpay_signature === expectedSign) {
                 db.tx(async (t) => {
                     const result = await t.oneOrNone(`UPDATE "Wallet_Recharge" SET verified = true WHERE receipt = $1 RETURNING amount`, [razorpay_order_id]);
-                    console.log(result);
+                
                     await t.none(`UPDATE "User" SET balance = balance + $1 WHERE id = $2`, [result.amount, req.user.id]);
                 })
                 res.status(200).json({ success: true, message: 'Payment verified successfully' });
             } else {
-                console.log("Invalid payment signature")
                 res.status(400).json({ success: false, error: 'Invalid payment signature' });
             }
         } catch (err) {

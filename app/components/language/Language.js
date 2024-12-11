@@ -2,15 +2,15 @@
 
 const langData = {
   "en": {
-    "title": "Payment Karo",
+    "title": "WalletXpress",
     "landingPage": {
       "section1": {
-        "title": "Ops! Bank server Error? and you don't have cash? Don't worry, Here we have Payment Karo!",
-        "desc": "Payment Karo is the app that allows you to conduct online transactions without involving banks. Send and receive money through your e-wallet, no more bank hassles."
+        "title": "Ops! Bank server Error? and you don't have cash? Don't worry, Here we have WalletXpress!",
+        "desc": "WalletXpress is the app that allows you to conduct online transactions without involving banks. Send and receive money through your e-wallet, no more bank hassles."
       },
       "keyFeature": {
-        "title": "Key Features of Payment Karo",
-        "desc": "Payment Karo Offers a seamsless and secure way to manage your finances without the hassle of banks",
+        "title": "Key Features of WalletXpress",
+        "desc": "WalletXpress Offers a seamsless and secure way to manage your finances without the hassle of banks",
         "features": [
           {
             "title": "E-wallet",
@@ -19,7 +19,7 @@ const langData = {
           },
           {
             "title": "Instant Transections",
-            "desc": "Enjoy lightning-fast transactions with Payment Karo, no more waiting for bank approvals.",
+            "desc": "Enjoy lightning-fast transactions with WalletXpress, no more waiting for bank approvals.",
             "img":"/landingPage/instant.png"
           },
           {
@@ -30,8 +30,8 @@ const langData = {
         ]
       },
       "workFlow": {
-        "title": "How Payment Karo Works",
-        "desc": "Discover the simple steps to start using payment Karo and manage your finances with ease",
+        "title": "How WalletXpress Works",
+        "desc": "Discover the simple steps to start using WalletXpress and manage your finances with ease",
         "steps": [
           {
             "title": "Recharge Your Wallet",
@@ -49,24 +49,24 @@ const langData = {
       },
       "review": {
         "title": "What Our Users Say",
-        "desc": "Hear from our satisfied cunsomers and see why the love using Payment Karo"
+        "desc": "Hear from our satisfied cunsomers and see why the love using WalletXpress"
       }
     },
-    "getStartedWithPaymentKaro": "Get Started with Payment Karo",
+    "getStartedWithPaymentKaro": "Get Started with WalletXpress",
     "getStarted": "Get Started",
     "learnMore": "Learn More",
     "Home": "Home",
   },
   "hindi": {
-    "title": "भुगतान करो",
+    "title": "WalletXpress",
     "landingPage": {
       "section1": {
-        "title": "ओह! बैंक सर्वर में त्रुटि? और आपके पास नकद नहीं है? चिंता न करें, यहाँ हमारे पास है पेमेंट करो!",
-        "desc": "पेमेंट करो एक ऐसा ऐप है जो आपको बिना बैंक की भागीदारी के ऑनलाइन लेनदेन करने की अनुमति देता है। अपने ई-वॉलेट के माध्यम से पैसे भेजें और प्राप्त करें, अब बैंक की झंझट नहीं।"
+        "title": "ओह! बैंक सर्वर में त्रुटि? और आपके पास नकद नहीं है? चिंता न करें, यहाँ हमारे पास है WalletXpress!",
+        "desc": "WalletXpress एक ऐसा ऐप है जो आपको बिना बैंक की भागीदारी के ऑनलाइन लेनदेन करने की अनुमति देता है। अपने ई-वॉलेट के माध्यम से पैसे भेजें और प्राप्त करें, अब बैंक की झंझट नहीं।"
       },
       "keyFeature": {
-        "title": "पेमेंट करो की प्रमुख विशेषताएँ",
-        "desc": "पेमेंट करो बैंक की झंझट के बिना आपके वित्त को प्रबंधित करने का एक सरल और सुरक्षित तरीका प्रदान करता है।",
+        "title": "WalletXpress की प्रमुख विशेषताएँ",
+        "desc": "WalletXpress बैंक की झंझट के बिना आपके वित्त को प्रबंधित करने का एक सरल और सुरक्षित तरीका प्रदान करता है।",
         "features": [
           {
             "title": "ई-वॉलेट",
@@ -74,7 +74,7 @@ const langData = {
           },
           {
             "title": "तुरंत लेनदेन",
-            "desc": "पेमेंट करो के साथ बिजली की गति से लेनदेन करें, अब बैंक अनुमोदनों का इंतजार नहीं करना पड़ेगा।",
+            "desc": "WalletXpress के साथ बिजली की गति से लेनदेन करें, अब बैंक अनुमोदनों का इंतजार नहीं करना पड़ेगा।",
           },
           {
             "title": "सुरक्षित भुगतान",
@@ -83,8 +83,8 @@ const langData = {
         ]
       },
       "workFlow": {
-        "title": "पेमेंट करो कैसे काम करता है",
-        "desc": "पेमेंट करो का उपयोग शुरू करने और अपने वित्त को आसानी से प्रबंधित करने के सरल चरणों की खोज करें",
+        "title": "WalletXpress कैसे काम करता है",
+        "desc": "WalletXpress का उपयोग शुरू करने और अपने वित्त को आसानी से प्रबंधित करने के सरल चरणों की खोज करें",
         "steps": [
           {
             "title": "अपना वॉलेट रिचार्ज करें",
@@ -102,10 +102,10 @@ const langData = {
       },
       "review": {
         "title": "हमारे उपयोगकर्ता क्या कहते हैं",
-        "desc": "हमारे संतुष्ट ग्राहकों से सुनें और जानें कि वे पेमेंट करो का उपयोग क्यों पसंद करते हैं"
+        "desc": "हमारे संतुष्ट ग्राहकों से सुनें और जानें कि वे WalletXpress का उपयोग क्यों पसंद करते हैं"
       }
     },
-    "getStartedWithPaymentKaro": "शुरुआत करें पेमेंट करो के साथ!",
+    "getStartedWithPaymentKaro": "शुरुआत करें WalletXpress के साथ!",
     "getStarted": "शुरू करें",
     "learnMore": "और अधिक जानें",
     "Home": "होम",

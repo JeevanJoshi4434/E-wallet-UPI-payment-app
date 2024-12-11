@@ -10,4 +10,5 @@ Router.route('/account/add-contact').post((req, res) => ExternalPaymentControlle
 Router.route('/account/add').post((req, res) => ExternalPaymentController.addAccount(req, res));
 Router.route('/create-order').post(isAuthenticatedUser, (req, res) => ExternalPaymentController.createOrder(req, res));
 Router.route('/verify-payment').post(isAuthenticatedUser, (req, res) => ExternalPaymentController.verifyPayment(req, res));
+Router.route('/payout').post(isAuthenticatedUser, (req, res) => ExternalPaymentController.makePayout(req, res));
 module.exports = Router
