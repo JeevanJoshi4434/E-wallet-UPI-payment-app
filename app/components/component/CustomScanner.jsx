@@ -12,99 +12,129 @@ export default function Scanner({ onScan, onError, onClose }) {
     const [loading, setLoading] = useState(true);
     const [isScannerOpen, setIsScannerOpen] = useState(true); // New state to control scanner open status
     const [url, setUrl] = useState("");
-    const initializeCamera = useCallback(async () => {
-        if (!isScannerOpen) return; // Only initialize camera if scanner is open
+    
+    let animationFrameId;
 
-        try {
-            if (!navigator.mediaDevices?.getUserMedia) {
-                throw new Error("Camera access is not supported by this browser.");
+   const initializeCamera = useCallback(async () => {
+    try {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error("Camera access is not supported by this browser.");
+        }
+
+        // Get all video input devices
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        console.log(devices);
+        const videoDevices = devices.filter(device => device.kind === "videoinput");
+
+        // Find the "main" back camera
+        let mainBackCamera = videoDevices.find(device =>
+            device.label.toLowerCase().includes("back") &&
+            device.label.toLowerCase().includes("main")
+        );
+
+        // Fallback to the first back camera if "main" isn't found
+        if (!mainBackCamera) {
+            mainBackCamera = videoDevices.find(device =>
+                device.label.toLowerCase().includes("back")
+            );
+        }
+
+        // Use the selected device ID to access the correct camera
+        const constraints = mainBackCamera
+            ? { video: { deviceId: mainBackCamera.deviceId } }
+            : { video: { facingMode: "environment" } }; // Fallback to default behavior
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.setAttribute("playsinline", true);
+            await videoRef.current.play();
+            setLoading(false);
+            requestAnimationFrame(tick);
+        }
+    } catch (err) {
+        console.log("Camera initialization error:", err);
+        setLoading(false);
+        onError && onError(err);
+    }
+}, [onError]);
+
+
+
+    const tick = () => {
+        if (canvasRef.current && videoRef.current) {
+            const { videoWidth, videoHeight } = videoRef.current;
+    
+            if (videoWidth === 0 || videoHeight === 0) {
+                requestAnimationFrame(tick); // Wait for video to initialize
+                return;
             }
-
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" },
-            });
-
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.setAttribute("playsinline", true);
-                await videoRef.current.play();
-                setLoading(false);
+    
+            const canvas = canvasRef.current;
+            const context = canvas.getContext("2d");
+            canvas.width = videoWidth;
+            canvas.height = videoHeight;
+    
+            context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+    
+            if (code) {
+                setData(code.data);
+                setScanning(false);
+                onScan && onScan(code.data);
+                stopCamera(); // Stop the camera once code is found
+                redirectURL(code.data); // Redirect to the correct URL
+            } else if (scanning) {
                 requestAnimationFrame(tick);
             }
-        } catch (err) {
-            console.log("Camera initialization error:", err);
-            setLoading(false);
-            onError && onError(err);
         }
-    }, [onError, isScannerOpen]);
+    };
+    
 
-    // Stop the camera
     const stopCamera = () => {
         if (videoRef.current?.srcObject) {
             const stream = videoRef.current.srcObject;
             stream.getTracks().forEach((track) => track.stop());
             videoRef.current.srcObject = null;
         }
-    };
-
-    useEffect(() => {
-        if (isScannerOpen) {
-            initializeCamera();
-        }
-
-        return () => {
-            stopCamera();
-        };
-    }, [initializeCamera, isScannerOpen]);
-
-    const tick = () => {
-        if (canvasRef.current && videoRef.current) {
-            const canvas = canvasRef.current;
-            const context = canvas.getContext("2d");
-            canvas.width = videoRef.current.videoWidth;
-            canvas.height = videoRef.current.videoHeight;
-            context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-
-            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-            if (code) {
-                setData(code.data);
-                setScanning(false);
-                onScan && onScan(code.data);
-                stopCamera(); // Stop the camera once code is found
-                // console.log(code.data);
-                const red = redirectURL(code.data);
-
-            } else if (scanning) {
-                requestAnimationFrame(tick);
-            }
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId); // Stop animation loop
+            animationFrameId = null;
         }
     };
+
 
     function redirectURL(QRData = "") {
-        if(!QRData.startsWith("upi://") && typeof QRData === "string") {
-            QRData = typeof QRData === "string" ? JSON.parse(QRData) : QRData;
-        }
-        if (QRData.TTL && !verifyTime(QRData.date, TTL)) {
-            window.alert("QR isn't working anymore. Request a new one.");
-        }
-        if (QRData && QRData.type && QRData.type === 1) {
-            setUrl(QRData.payURL);
-            window.location.href = QRData.payURL;
-        } else if (QRData) {
-            const upiRegex = /^upi:\/\/pay\?.+/;
-            if (!upiRegex.test(QRData)) {
-                return false;
+        try {
+            let parsedData = QRData.startsWith("upi://") ? QRData : JSON.parse(QRData);
+    
+            if (parsedData.TTL && !verifyTime(parsedData.date, TTL)) {
+                alert("QR isn't working anymore. Request a new one.");
+                return;
             }
-            const payURL = `${process.env.NEXT_PUBLIC_URL}/payment/pay?${QRData.slice(10, QRData.length)}&&type=upi`;
-            setUrl(payURL);
-            window.location.href = payURL;
-        }
-        else {
-            return false;
+    
+            if (parsedData?.type === 1) {
+                setUrl(parsedData.payURL);
+                window.location.href = parsedData.payURL;
+            } else {
+                const upiRegex = /^upi:\/\/pay\?.+/;
+                if (upiRegex.test(parsedData)) {
+                    const payURL = `${process.env.NEXT_PUBLIC_URL}/payment/pay?${parsedData.slice(10)}&&type=upi`;
+                    setUrl(payURL);
+                    window.location.href = payURL;
+                } else {
+                    console.warn("Invalid QR data format");
+                }
+            }
+        } catch (err) {
+            console.error("Error parsing QR data:", err);
+            alert("Failed to process QR Code.");
         }
     }
+    
 
     const handleClose = () => {
         stopCamera();
@@ -112,6 +142,17 @@ export default function Scanner({ onScan, onError, onClose }) {
         setIsScannerOpen(false); // Set scanner status to closed
         onClose && onClose();
     };
+
+   
+    useEffect(() => {
+        if (isScannerOpen) {
+            initializeCamera();
+        }
+    
+        return () => {
+            stopCamera(); // Cleanup on unmount or when scanner closes
+        };
+    }, [initializeCamera, isScannerOpen]);
 
     return (
         <div className="qr-scanner flex items-center justify-center flex-col">
@@ -124,7 +165,7 @@ export default function Scanner({ onScan, onError, onClose }) {
                     onError && onError(err);
                 }}
             />
-            {!data && <canvas ref={canvasRef} className="w-full rounded-md h-auto max-w-96 max-h-96" />}
+            {!data && <canvas ref={canvasRef} className="w-full border-black border-2 rounded-md h-auto max-w-96 max-h-96" />}
             {loading && <p>Loading camera...</p>}
             {data && (
                 <div className="scanned-data">

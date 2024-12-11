@@ -15,7 +15,7 @@ export default function QRCodeScanner() {
 
   return (
     <div className="container mx-auto text-center p-4">
-      <h1 className="text-2xl font-bold mb-4">Pay with QR Code</h1>
+      <h1 className="text-2xl font-bold mb-4">Scan & Pay with QR Code</h1>
       <Scanner onScan={handleScan} onError={handleError} />
       {scanResult && (
         <div className="mt-4 p-2 border rounded">
