@@ -8,14 +8,14 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_SERVICE_MAIN=http://103.141.90.248:4000
-      - NEXT_PUBLIC_SERVICE_PAYMENT=http://103.141.90.248:5000
+      - NEXT_PUBLIC_SERVICE_MAIN=MAIN_SERVICE_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - NEXT_PUBLIC_SERVICE_PAYMENT=PAYMENT_SERVICE_URL_STARTING_WITH_HTTP_OR_HTTPS
       - NEXT_PUBLIC_PRODUCTION=PRODUCTION
-      - URL=http://103.141.90.248:3000
-      - NEXT_PUBLIC_URL=http://103.141.90.248:3000
-      - SALT=10
-      - NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_UUwV8lCbptnsG5
-      - NEXT_PUBLIC_RAZORPAY_KEY_SECRET=Ty2vl4x8SHm8Nu5NMW78k3mt
+      - URL=FRONTEND_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - NEXT_PUBLIC_URL=FRONTEND_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - SALT=NO_OF_SALTS_INTEGER
+      - NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_YOUR_KEY
+      - NEXT_PUBLIC_RAZORPAY_KEY_SECRET=YOUR_RAZORPAY_SECRET
     depends_on:
       - redis
       - postgres
@@ -35,21 +35,20 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - NODE_ENV=production
-      - REDIS_HOST=redis
-      - POSTGRES_HOST=postgres
-      - PORT=4000
-      - SALT=10
-      - JWT_SECRET="PAY$AS$YOU$GO@!@"
-      - OTP_TTL=300
-      - PAYMENT_REQUEST_TTL=600
-      - QUICK_TTL=120
+      - NEXT_PUBLIC_SERVICE_MAIN=MAIN_SERVICE_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - NEXT_PUBLIC_SERVICE_PAYMENT=PAYMENT_SERVICE_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - NEXT_PUBLIC_PRODUCTION=PRODUCTION
+      - URL=FRONTEND_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - NEXT_PUBLIC_URL=FRONTEND_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - SALT=NO_OF_SALTS_INTEGER
+      - NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_YOUR_KEY
+      - NEXT_PUBLIC_RAZORPAY_KEY_SECRET=YOUR_RAZORPAY_SECRET
     depends_on:
       - redis
       - postgres
     volumes:
       - ./main:/usr/src/main
-       - /usr/src/main/node_modules
+      - /usr/src/main/node_modules
     restart: unless-stopped
     networks:
       - app-network
@@ -61,30 +60,20 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - NODE_ENV=production
-      - REDIS_HOST=redis
-      - POSTGRES_HOST=postgres
-      - PORT=5000
-      - SALT=10
-      - JWT_SECRET=secret
-      - OTP_TTL=300
-      - PAYMENT_REQUEST_TTL=600
-      - QUICK_TTL=120
-      - cashfreePayoutClientId=CF10346080CSQR336U5O6S73C0LQIG
-      - cashfreePayoutClientSecret=cfsk_ma_test_d373bc3158aa110a3395b5af7b9de4fc_d87d3417
-      - cashfreeGatewayClientId=TEST10346080913f679be6f3ef0f65de08064301
-      - cashfreeGatewayClientSecret=cfsk_ma_test_6c07a15b220768469149e2a060df96b6_9c9e5ae4
-      - RAZORPAY_KEY_ID=rzp_test_UUwV8lCbptnsG5
-      - RAZORPAY_KEY_SECRET=Ty2vl4x8SHm8Nu5NMW78k3mt
-      - RAZORPAY_ACCOUNT_NUMBER=2323230012154222
-      - RAZORPAY_GATEWAY_KEY_ID=rzp_test_UUwV8lCbptnsG5
-      - RAZORPAY_GATEWAY_KEY_SECRET=Ty2vl4x8SHm8Nu5NMW78k3mt
+      - NEXT_PUBLIC_SERVICE_MAIN=MAIN_SERVICE_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - NEXT_PUBLIC_SERVICE_PAYMENT=PAYMENT_SERVICE_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - NEXT_PUBLIC_PRODUCTION=PRODUCTION
+      - URL=FRONTEND_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - NEXT_PUBLIC_URL=FRONTEND_URL_STARTING_WITH_HTTP_OR_HTTPS
+      - SALT=NO_OF_SALTS_INTEGER
+      - NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_YOUR_KEY
+      - NEXT_PUBLIC_RAZORPAY_KEY_SECRET=YOUR_RAZORPAY_SECRET
     depends_on:
       - redis
       - postgres
     volumes:
       - ./payment:/usr/src/pay
-       - /usr/src/pay/node_modules
+      - /usr/src/pay/node_modules
     restart: unless-stopped
     networks:
       - app-network
@@ -102,9 +91,9 @@ services:
     image: postgres:latest
     container_name: postgres
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin@123
-      POSTGRES_DB: paymentkaro
+      POSTGRES_USER: ROOT_USERNAME
+      POSTGRES_PASSWORD: ROOT_PASSWORD
+      POSTGRES_DB: DB_NAME
     ports:
       - "5432:5432"
     volumes:
